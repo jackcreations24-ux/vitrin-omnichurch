@@ -1,0 +1,87 @@
+{
+  "entities": {
+    "DownloadConfig": {
+      "title": "DownloadConfig",
+      "description": "Konfigirasyon lyen telechajman ofisyèl OmniChurch pou tout vizitè yo",
+      "type": "object",
+      "properties": {
+        "androidApk": { "type": "string" },
+        "pcExe64": { "type": "string" },
+        "pcExe32": { "type": "string" },
+        "pcMsi": { "type": "string" },
+        "macDmg": { "type": "string" },
+        "iosUrl": { "type": "string" },
+        "appGalleryUrl": { "type": "string" },
+        "directZipUrl": { "type": "string" },
+        "version": { "type": "string" },
+        "releaseDate": { "type": "string" },
+        "sizeMb": { "type": "string" },
+        "releaseNotes": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      }
+    },
+    "SiteTextsConfig": {
+      "title": "SiteTextsConfig",
+      "description": "Tèks ak enfòmasyon kontak OmniChurch",
+      "type": "object",
+      "properties": {
+        "churchName": { "type": "string" },
+        "heroHeadline": { "type": "string" },
+        "heroSubheadline": { "type": "string" },
+        "heroBadge": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "contactPhone": { "type": "string" },
+        "contactWhatsapp": { "type": "string" },
+        "contactAddress": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      }
+    },
+    "AdSenseConfig": {
+      "title": "AdSenseConfig",
+      "description": "Monetizasyon ak konfigirasyon Google AdSense",
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "publisherId": { "type": "string" },
+        "headerSlot": { "type": "string" },
+        "inContentSlot": { "type": "string" },
+        "footerSlot": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      }
+    },
+    "GlobalAnalytics": {
+      "title": "GlobalAnalytics",
+      "description": "Analiz an tan reyèl pou vizit ak telechajman global",
+      "type": "object",
+      "properties": {
+        "totalVisits": { "type": "number" },
+        "totalDownloads": { "type": "number" },
+        "mobileDownloads": { "type": "number" },
+        "pcDownloads": { "type": "number" },
+        "lastUpdated": { "type": "string" }
+      }
+    },
+    "TestConnection": {
+      "title": "TestConnection",
+      "description": "Dokiman tès pou valide koneksyon ak Firestore",
+      "type": "object",
+      "properties": {
+        "status": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/test/{testId}": {
+      "schema": { "$ref": "#/entities/TestConnection" },
+      "description": "Pwen tès pou valide koneksyon sèvè Firestore"
+    },
+    "/config/{configId}": {
+      "schema": { "$ref": "#/entities/DownloadConfig" },
+      "description": "Konfigirasyon jeneral pou sit la (lyen telechajman, tèks, piblisite)"
+    },
+    "/analytics/{metricId}": {
+      "schema": { "$ref": "#/entities/GlobalAnalytics" },
+      "description": "Estatistik vizit ak telechajman an tan reyèl"
+    }
+  }
+}
