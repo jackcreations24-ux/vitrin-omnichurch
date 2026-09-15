@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+  <!-- Paj Prensipal OmniChurch (Vitrin & Pwofil) -->
+  <url>
+    <loc>https://omnichurch.download/</loc>
+    <lastmod>2026-09-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Sant Telechajman PC & Mobil (Android, Windows, Mac) -->
+  <url>
+    <loc>https://omnichurch.download/?sec=telechaje</loc>
+    <lastmod>2026-09-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Fonksyonalite & Karakteristik Jesyon Legliz -->
+  <url>
+    <loc>https://omnichurch.download/?sec=features</loc>
+    <lastmod>2026-09-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Estrikti Teknoloji & Sekirite Done -->
+  <url>
+    <loc>https://omnichurch.download/?sec=sekirite</loc>
+    <lastmod>2026-09-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Demonstrasyon Entèaktif OmniChurch -->
+  <url>
+    <loc>https://omnichurch.download/?sec=demo</loc>
+    <lastmod>2026-09-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Kontak & Sipò Teknik Devlopè ZOUTIW -->
+  <url>
+    <loc>https://omnichurch.download/?sec=contact</loc>
+    <lastmod>2026-09-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+</urlset>

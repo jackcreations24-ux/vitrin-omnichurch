@@ -1,0 +1,5 @@
+# robots.txt for OmniChurch
+User-agent: *
+Allow: /
+
+Sitemap: https://omnichurch.download/sitemap.xml

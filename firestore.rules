@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pèmèt tès koneksyon an
+    match /test/{testId} {
+      allow read: if true;
+    }
+
+    // Pèmèt tout vizitè li konfigirasyon sit la (lyen telechajman, anons, vèsyon)
+    // epi pèmèt administratè a (nan panèl dev la) mete yo ajou
+    match /config/{configId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Pèmèt anrejistreman estatistik vizit ak telechajman an tan reyèl
+    match /analytics/{metricId} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}

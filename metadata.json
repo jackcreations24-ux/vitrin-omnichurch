@@ -1,0 +1,6 @@
+{
+  "name": "OmniChurch - Platfòm & Tèm Blogger pou Legliz",
+  "description": "OmniChurch se platfòm pwofesyonèl pou jesyon manm, kominikasyon SMS, dim ak ofrann, ak kalandriye kil. Teknoloji offline-first ki pwoteje done yo lokalman, 100% gratis pou Android, Windows ak Mac.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
