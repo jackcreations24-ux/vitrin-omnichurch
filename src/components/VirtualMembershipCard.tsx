@@ -12,7 +12,7 @@ export const VirtualMembershipCard: React.FC = () => {
 
   return (
     <div
-      className="relative select-none pointer-events-auto group"
+      className="relative select-none pointer-events-auto group w-full max-w-[290px] sm:max-w-[320px] mx-auto flex justify-center"
       style={{ perspective: '1200px' }}
       onClick={toggleManualFlip}
       title="Kat Manm Vityèl OmniChurch - Pase sourit oswa klike pou wè rekto ak vèso"
@@ -22,7 +22,7 @@ export const VirtualMembershipCard: React.FC = () => {
 
       {/* 3D Rotating Container */}
       <div
-        className={`w-[250px] sm:w-[275px] h-[155px] sm:h-[168px] relative rounded-2xl cursor-pointer transition-all duration-700 ease-out preserve-3d shadow-[0_15px_35px_rgba(0,0,0,0.55),0_0_20px_rgba(53,201,255,0.2)] hover:shadow-[0_20px_45px_rgba(8,124,255,0.45),0_0_30px_rgba(53,201,255,0.35)] ${
+        className={`w-[260px] xs:w-[280px] sm:w-[300px] h-[165px] xs:h-[175px] sm:h-[185px] relative rounded-2xl cursor-pointer transition-all duration-700 ease-out preserve-3d shadow-[0_15px_35px_rgba(0,0,0,0.55),0_0_20px_rgba(53,201,255,0.2)] hover:shadow-[0_20px_45px_rgba(8,124,255,0.45),0_0_30px_rgba(53,201,255,0.35)] ${
           manualFlipped === null ? 'animate-card-float-spin' : ''
         }`}
         style={

@@ -32,6 +32,7 @@ import {
   Cloud,
   Share2,
   Code,
+  Clock,
 } from 'lucide-react';
 import { DownloadLinks, AnalyticsState, AdSenseConfig, SiteTextsConfig, SEOConfig } from '../types';
 import {
@@ -111,6 +112,65 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
   const [textSaveSuccess, setTextSaveSuccess] = useState(false);
   const [seoSaveSuccess, setSeoSaveSuccess] = useState(false);
 
+  // Ultra-secure 10-second auto-lock / auto-close inactivity timer
+  const [autoCloseCountdown, setAutoCloseCountdown] = useState(10);
+  const autoCloseTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const resetInactivityTimer = () => {
+    setAutoCloseCountdown(10);
+    if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current);
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+
+    if (isOpen) {
+      countdownIntervalRef.current = setInterval(() => {
+        setAutoCloseCountdown((prev) => {
+          if (prev <= 1) {
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      autoCloseTimerRef.current = setTimeout(() => {
+        // Auto-close and clear sensitive state
+        onClose();
+        setIsUnlocked(false);
+        setPassword('');
+        clearDevSession();
+      }, 10000);
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen) {
+      if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current);
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+      return;
+    }
+
+    resetInactivityTimer();
+
+    // Reset inactivity timer on any user interaction inside the window
+    const handleUserInteraction = () => {
+      resetInactivityTimer();
+    };
+
+    window.addEventListener('mousemove', handleUserInteraction, { passive: true });
+    window.addEventListener('keydown', handleUserInteraction, { passive: true });
+    window.addEventListener('touchstart', handleUserInteraction, { passive: true });
+    window.addEventListener('click', handleUserInteraction, { passive: true });
+
+    return () => {
+      if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current);
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+      window.removeEventListener('mousemove', handleUserInteraction);
+      window.removeEventListener('keydown', handleUserInteraction);
+      window.removeEventListener('touchstart', handleUserInteraction);
+      window.removeEventListener('click', handleUserInteraction);
+    };
+  }, [isOpen]);
+
   // Blogger XML copy status
   const [copiedXml, setCopiedXml] = useState(false);
 
@@ -156,23 +216,6 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
     const trimmed = password.trim();
     if (!trimmed || isVerifying) return;
 
-    // Direct match for default master credentials
-    if (
-      trimmed === 'OmniChurch@2026' ||
-      trimmed.toLowerCase() === 'admin' ||
-      trimmed.toLowerCase() === 'jackson' ||
-      trimmed.toLowerCase() === 'jackson318638@gmail.com'
-    ) {
-      if (rememberSession) {
-        activateDevSession('Jackson Charles (jackson318638@gmail.com)');
-      }
-      setIsUnlocked(true);
-      setPasswordError(null);
-      setLockedOutUntil(null);
-      setActiveAccount('Jackson Charles (jackson318638@gmail.com)');
-      return;
-    }
-
     setIsVerifying(true);
     setPasswordError(null);
 
@@ -186,6 +229,7 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
         setPasswordError(null);
         setLockedOutUntil(null);
         setActiveAccount('Jackson Charles (jackson318638@gmail.com)');
+        resetInactivityTimer();
       } else {
         setPasswordError(result.message || 'Modpas la pa kòrèk.');
         if (result.lockedOutUntil) {
@@ -397,6 +441,19 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* 10s Inactivity Auto-Lock Countdown Badge */}
+            <div
+              className={`px-2.5 py-1 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition-colors ${
+                autoCloseCountdown <= 3
+                  ? 'bg-red-950/80 border border-red-500/50 text-red-400 animate-pulse'
+                  : 'bg-black/50 border border-white/10 text-cyan-300'
+              }`}
+              title="Aksè a pwoteje: panèl la ap fèmen otomatikman apre 10s si pa gen aktivite pou garanti sekirite maksimòm."
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>{autoCloseCountdown}s</span>
+            </div>
+
             {isUnlocked && (
               <button
                 onClick={() => {
@@ -424,7 +481,7 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
         {/* Auth Barrier if Locked */}
         {!isUnlocked ? (
           <div className="p-6 sm:p-8 max-w-lg mx-auto text-center space-y-5">
-            {/* Developer Account Card */}
+            {/* Developer Account Badge */}
             <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-950/70 via-black/60 to-cyan-950/50 border border-[#35c9ff]/30 shadow-[0_0_35px_rgba(8,124,255,0.25)] space-y-4">
               <div className="flex items-center justify-between">
                 <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-[#087cff]/20 text-[#35c9ff] border border-[#35c9ff]/40 flex items-center gap-1.5">
@@ -450,21 +507,6 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                   </p>
                 </div>
               </div>
-
-              <button
-                type="button"
-                onClick={handleQuickLoginAsJackson}
-                className="btn-gradient w-full py-3 rounded-xl text-white font-extrabold text-sm cursor-pointer shadow-[0_0_25px_rgba(8,124,255,0.5)] flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform"
-              >
-                <Unlock className="w-4 h-4" />
-                <span>Konekte kòm Jackson Charles (Aksè Otomatik)</span>
-              </button>
-            </div>
-
-            <div className="flex items-center gap-3 text-xs text-blue-200/40">
-              <div className="flex-1 h-px bg-white/10"></div>
-              <span>Oswa antre modpas sekirite w la</span>
-              <div className="flex-1 h-px bg-white/10"></div>
             </div>
 
             <form onSubmit={handleUnlock} className="space-y-3">
@@ -472,7 +514,7 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Modpas devlopè (pa egzanp: OmniChurch@2026)..."
+                placeholder="Antre modpas sekirite w la..."
                 disabled={isVerifying || (lockedOutUntil !== null && lockedOutUntil > Date.now())}
                 className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#35c9ff] transition disabled:opacity-50 disabled:cursor-not-allowed font-mono"
               />
@@ -487,7 +529,6 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                   />
                   <span>Kenbe sesyon mwen an louvri</span>
                 </label>
-                <span className="text-[11px] text-blue-200/50">Modpas defo: OmniChurch@2026</span>
               </div>
 
               {passwordError && (
@@ -500,17 +541,17 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
               <button
                 type="submit"
                 disabled={isVerifying || (lockedOutUntil !== null && lockedOutUntil > Date.now())}
-                className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-bold text-xs cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 transition"
+                className="btn-gradient w-full py-3 rounded-xl text-white font-extrabold text-sm cursor-pointer shadow-[0_0_25px_rgba(8,124,255,0.5)] flex items-center justify-center gap-2 hover:scale-[1.01] transition-transform disabled:opacity-50"
               >
                 {isVerifying ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                    <span>Verifikasyon...</span>
+                    <span>Verifikasyon an kous...</span>
                   </>
                 ) : (
                   <>
-                    <Lock className="w-3.5 h-3.5" />
-                    <span>Otorize ak Modpas</span>
+                    <Lock className="w-4 h-4" />
+                    <span>Debloke Panèl Devlopè</span>
                   </>
                 )}
               </button>

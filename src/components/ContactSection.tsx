@@ -1,31 +1,20 @@
-import React, { useState } from 'react';
-import { Mail, MessageCircle, Send, ArrowUp, Heart, ShieldCheck, Lock } from 'lucide-react';
+import React from 'react';
+import { Mail, MessageCircle, Send, ArrowUp, Heart, ShieldCheck } from 'lucide-react';
 import { DEV_INFO, DEFAULT_SITE_TEXTS } from '../data/defaultData';
 import { SiteTextsConfig } from '../types';
 import { useI18n } from '../i18n/I18nContext';
 
 interface ContactSectionProps {
   siteTexts?: SiteTextsConfig;
-  onOpenDev?: () => void;
 }
 
-export const ContactSection: React.FC<ContactSectionProps> = ({ siteTexts, onOpenDev }) => {
+export const ContactSection: React.FC<ContactSectionProps> = ({ siteTexts }) => {
   const { t, lang } = useI18n();
-  const [clickCount, setClickCount] = useState(0);
   const isCustomEdited = siteTexts && siteTexts.footerAbout !== DEFAULT_SITE_TEXTS.footerAbout;
   const footerAboutText = (isCustomEdited && lang === 'ht') ? siteTexts.footerAbout : t.footer.about;
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleCopyrightClick = () => {
-    const next = clickCount + 1;
-    setClickCount(next);
-    if (next >= 3) {
-      setClickCount(0);
-      onOpenDev?.();
-    }
   };
 
   return (
@@ -103,11 +92,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ siteTexts, onOpe
         {/* Footer Bottom */}
         <div className="mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-blue-200/60">
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 select-none text-center sm:text-left">
-            <span
-              onClick={handleCopyrightClick}
-              className="cursor-pointer hover:text-white transition"
-              title="© 2026 ZOUTIW RESERVED. (Klike 3 fwa pou aksè devlopè)"
-            >
+            <span>
               {t.footer.rights}
             </span>
             <span className="hidden sm:inline">•</span>
@@ -117,17 +102,6 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ siteTexts, onOpe
           </div>
 
           <div className="flex items-center gap-2">
-            {onOpenDev && (
-              <button
-                onClick={onOpenDev}
-                className="btn-secondary px-3 py-2 rounded-xl text-blue-200/50 hover:text-[#35c9ff] transition flex items-center gap-1.5 font-bold cursor-pointer text-[11px]"
-                title="Aksè Devlopè Jackson Charles"
-              >
-                <Lock className="w-3.5 h-3.5" />
-                <span>Dev Panèl</span>
-              </button>
-            )}
-
             <button
               onClick={scrollToTop}
               className="btn-secondary p-2.5 rounded-xl text-blue-200/80 hover:text-white transition flex items-center gap-1.5 font-bold cursor-pointer"

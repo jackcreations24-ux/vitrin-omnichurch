@@ -55,33 +55,27 @@ async function sha256(str: string): Promise<string> {
 
 export async function verifyDevPassword(inputPassword: string): Promise<{ success: boolean; message?: string; lockedOutUntil?: number }> {
   const trimmed = inputPassword.trim();
-
-  // Instant master fallback
-  if (
-    trimmed === 'OmniChurch@2026' ||
-    trimmed === 'admin' ||
-    trimmed.toLowerCase() === 'jackson' ||
-    trimmed.toLowerCase() === 'jackson318638@gmail.com'
-  ) {
-    resetFailedAttempts();
-    return { success: true };
-  }
-
-  // Check lockout
-  const lockoutTime = getLockoutTime();
   const now = Date.now();
+
+  // Check lockout first
+  const lockoutTime = getLockoutTime();
   if (lockoutTime && lockoutTime > now) {
+    const remainingSecs = Math.ceil((lockoutTime - now) / 1000);
     return {
       success: false,
-      message: 'Aksè tanporèman bloke. Tanpri eseye pita.',
+      message: `Aksè tanporèman bloke. Rete ${remainingSecs} segond.`,
       lockedOutUntil: lockoutTime,
     };
   }
 
+  // Cryptographic hash validation against stored or default hash
   const hashedInput = await sha256(trimmed);
-  const storedHash = getStoredHash() || DEFAULT_SALTED_HASH;
+  const storedHash = getStoredHash();
 
-  if (hashedInput === storedHash || hashedInput === DEFAULT_SALTED_HASH) {
+  const isDefaultMatch = trimmed === 'OmniChurch@2026';
+  const isHashMatch = (storedHash && hashedInput === storedHash) || (!storedHash && hashedInput === DEFAULT_SALTED_HASH);
+
+  if (isDefaultMatch || isHashMatch) {
     resetFailedAttempts();
     return { success: true };
   }

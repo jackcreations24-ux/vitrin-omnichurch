@@ -354,7 +354,6 @@ export default function App() {
       {/* Contact & Footer with Jackson Charles credentials and (c) ZOUTIW */}
       <ContactSection
         siteTexts={siteTexts}
-        onOpenDev={() => setDevModalOpen(true)}
       />
 
       {/* Developer Dashboard Modal (Links management, Real-time analytics, Blogger XML Theme exporter, SEO & Sitemap) */}
