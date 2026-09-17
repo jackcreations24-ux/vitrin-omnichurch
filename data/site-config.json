@@ -1,17 +1,17 @@
 {
   "links": {
-    "android": "",
+    "android": "https://github.com/jackcreations24-ux/vitrin-omnichurch/releases/download/v1.1.0/OmniChurch-v1.1.0-release.apk",
     "ios": "",
-    "pc": "",
-    "pc32": "",
+    "pc": "https://github.com/jackcreations24-ux/vitrin-omnichurch/releases/download/v1.1.0/OmniChurch.Pro.v1.1.0.Setup.x64.exe",
+    "pc32": "https://github.com/jackcreations24-ux/vitrin-omnichurch/releases/download/v1.1.0/OmniChurch.Pro.v1.1.0.Setup.ia32.exe",
     "mac": "",
-    "web": ""
+    "web": "https://jackcreations24-ux.github.io/vitrin-omnichurch/"
   },
   "siteTexts": null,
   "adsense": null,
   "seo": null,
   "analytics": {
-    "totalVisits": 0,
+    "totalVisits": 4,
     "totalDownloads": 0,
     "mobileDownloads": 0,
     "pcDownloads": 0

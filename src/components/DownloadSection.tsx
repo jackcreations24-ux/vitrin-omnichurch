@@ -110,15 +110,17 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({
 
   const handleDownloadClick = (platform: 'mobile' | 'pc', name: string, url?: string) => {
     onTrackDownload(platform, name);
-    if (url && url !== '#') {
+    const targetUrl = url && url !== '#' ? url : 'https://github.com/jackcreations24-ux/vitrin-omnichurch/releases/latest';
+    try {
       const a = document.createElement('a');
-      a.href = url;
+      a.href = targetUrl;
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
-      a.download = platform === 'mobile' ? 'OmniChurch-v2.4.apk' : `OmniChurch-Setup-${name.includes('32') ? 'x86' : 'x64'}.exe`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+    } catch {
+      window.location.href = targetUrl;
     }
   };
 

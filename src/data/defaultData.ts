@@ -39,7 +39,7 @@ export const DEFAULT_SITE_TEXTS: SiteTextsConfig = {
   // Hero / Header
   heroEyebrow: 'BYENVENI SOU OMNICHURCH',
   heroEyebrowSub: 'Platfòm Dijital Ofisyèl',
-  heroBadge: 'v1.0.0 Stable',
+  heroBadge: 'v1.1.0 Stable',
   heroTitlePrefix: 'Platfòm Dijital Ofisyèl pou',
   heroTitleHighlight: 'OmniChurch',
   heroSubtitle: 'Jesyon Legliz & Kat Manm Dijital',
@@ -86,12 +86,13 @@ export const DEFAULT_ADSENSE: AdSenseConfig = {
 };
 
 export const DEFAULT_LINKS: DownloadLinks = {
-  android: '',
+  android:
+    'https://github.com/jackcreations24-ux/vitrin-omnichurch/releases/download/v1.1.0/OmniChurch-v1.1.0-release.apk',
   ios: '',
-  pc: '',
-  pc32: '',
+  pc: 'https://github.com/jackcreations24-ux/vitrin-omnichurch/releases/download/v1.1.0/OmniChurch.Pro.v1.1.0.Setup.x64.exe',
+  pc32: 'https://github.com/jackcreations24-ux/vitrin-omnichurch/releases/download/v1.1.0/OmniChurch.Pro.v1.1.0.Setup.ia32.exe',
   mac: '',
-  web: '',
+  web: 'https://jackcreations24-ux.github.io/vitrin-omnichurch/',
 };
 
 export const INITIAL_HOURLY_TRAFFIC: TrafficPoint[] = [
@@ -185,8 +186,12 @@ export function loadSavedLinks(): DownloadLinks {
       const parsed = JSON.parse(raw);
       const cleaned: Partial<DownloadLinks> = {};
       for (const [key, val] of Object.entries(parsed)) {
-        if (typeof val === 'string' && !val.includes('jacksoncharles/omnichurch/releases/download/v2.4.0')) {
-          cleaned[key as keyof DownloadLinks] = val;
+        if (
+          typeof val === 'string' &&
+          val.trim() !== '' &&
+          !val.includes('jacksoncharles/omnichurch/releases/download/v2.4.0')
+        ) {
+          cleaned[key as keyof DownloadLinks] = val.trim();
         }
       }
       return { ...DEFAULT_LINKS, ...cleaned };

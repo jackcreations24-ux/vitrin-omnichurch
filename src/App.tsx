@@ -32,6 +32,7 @@ import {
   saveSiteTextsToStorage,
   loadSavedSEO,
   saveSEOToStorage,
+  DEFAULT_SITE_TEXTS,
 } from './data/defaultData';
 import {
   subscribeToCloudDownloads,
@@ -55,6 +56,7 @@ import {
   trackServerVisit,
   trackServerDownload,
 } from './services/apiConfig';
+import { fetchLatestGitHubRelease } from './services/githubReleases';
 import {
   recordRealVisit,
   recordRealDownload,
@@ -136,6 +138,41 @@ export default function App() {
     });
 
     trackServerVisit();
+
+    // 2. Fetch live GitHub Release directly from repository (works 100% reliably on all devices & static GitHub Pages)
+    fetchLatestGitHubRelease().then((ghRelease) => {
+      if (ghRelease && ghRelease.links) {
+        const validLinks: Partial<DownloadLinks> = {};
+        if (ghRelease.links.android) validLinks.android = ghRelease.links.android;
+        if (ghRelease.links.pc) validLinks.pc = ghRelease.links.pc;
+        if (ghRelease.links.pc32) validLinks.pc32 = ghRelease.links.pc32;
+        if (ghRelease.links.mac) validLinks.mac = ghRelease.links.mac;
+
+        if (Object.keys(validLinks).length > 0) {
+          setLinks((prev) => {
+            const merged = { ...prev, ...validLinks };
+            saveLinksToStorage(merged);
+            return merged;
+          });
+        }
+
+        if (ghRelease.version) {
+          setSiteTexts((prev) => {
+            const currentBadge = prev?.heroBadge || '';
+            // Update badge if not customized or matching previous version
+            if (!currentBadge || currentBadge.includes('v1.0') || currentBadge.includes('v1.1')) {
+              const updated = {
+                ...(prev || DEFAULT_SITE_TEXTS),
+                heroBadge: `${ghRelease.version} Stable`,
+              };
+              saveSiteTextsToStorage(updated);
+              return updated;
+            }
+            return prev;
+          });
+        }
+      }
+    });
 
     const unsubDownloads = subscribeToCloudDownloads((cloudLinks) => {
       if (cloudLinks && (cloudLinks.android || cloudLinks.pc || cloudLinks.pc32 || cloudLinks.mac)) {

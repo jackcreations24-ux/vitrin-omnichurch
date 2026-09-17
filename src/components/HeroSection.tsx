@@ -63,18 +63,18 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     }
     setDownloadFeedback(name);
 
-    // Trigger download
-    if (url && url !== '#') {
+    // Trigger download reliably
+    const downloadTarget = url && url !== '#' ? url : 'https://github.com/jackcreations24-ux/vitrin-omnichurch/releases/latest';
+    try {
       const a = document.createElement('a');
-      a.href = url;
+      a.href = downloadTarget;
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
-      a.download = platform === 'mobile' ? 'OmniChurch-v2.4.apk' : `OmniChurch-Setup-${name.includes('32') ? 'x86' : 'x64'}.exe`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-    } else {
-      onOpenDownload(platform);
+    } catch {
+      window.location.href = downloadTarget;
     }
 
     setTimeout(() => {
