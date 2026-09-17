@@ -6,24 +6,33 @@ import {
   Globe,
   ChevronDown,
   Home,
-  Sparkles,
+  Layers,
   BookOpen,
   ShieldCheck,
-  Eye,
+  Quote,
   Mail,
+  Scale,
 } from 'lucide-react';
 import { SecureLivePill } from './SecureLivePill';
 import { useI18n } from '../i18n/I18nContext';
 import { SupportedLang } from '../i18n/translations';
+import { PolicyTab } from './PoliciesModal';
 
 interface NavbarProps {
   onOpenDev: () => void;
   onOpenDownload: (platform?: 'mobile' | 'pc') => void;
   liveUsers: number;
   versionBadge?: string;
+  onOpenPolicies?: (tab?: PolicyTab) => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenDev, onOpenDownload, liveUsers, versionBadge }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  onOpenDev,
+  onOpenDownload,
+  liveUsers,
+  versionBadge,
+  onOpenPolicies,
+}) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -138,7 +147,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenDev, onOpenDownload, liveU
                     className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-blue-100/85 hover:text-white hover:bg-blue-600/20 transition text-left cursor-pointer group"
                   >
                     <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-400/20 flex items-center justify-center text-[#35c9ff] group-hover:scale-110 transition">
-                      <Sparkles className="w-3.5 h-3.5" />
+                      <Layers className="w-3.5 h-3.5" />
                     </div>
                     <span>{t.nav.features}</span>
                   </button>
@@ -167,13 +176,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenDev, onOpenDownload, liveU
                   </button>
 
                   <button
-                    onClick={() => scrollTo('preview')}
+                    onClick={() => scrollTo('temwayaj')}
                     className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-blue-100/85 hover:text-white hover:bg-blue-600/20 transition text-left cursor-pointer group"
                   >
                     <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-400/20 flex items-center justify-center text-[#35c9ff] group-hover:scale-110 transition">
-                      <Eye className="w-3.5 h-3.5" />
+                      <Quote className="w-3.5 h-3.5" />
                     </div>
-                    <span>{t.nav.preview}</span>
+                    <span>{lang === 'ht' ? 'Temwayaj' : lang === 'fr' ? 'Témoignages' : lang === 'es' ? 'Testimonios' : 'Testimonials'}</span>
                   </button>
 
                   <button
@@ -195,6 +204,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenDev, onOpenDownload, liveU
                     </div>
                     <span>{t.nav.contact}</span>
                   </button>
+
+                  <div className="pt-1 mt-1 border-t border-white/10">
+                    <button
+                      onClick={() => {
+                        setDesktopMenuOpen(false);
+                        onOpenPolicies?.('privacy');
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#35c9ff] hover:text-white hover:bg-blue-600/20 transition text-left cursor-pointer group"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center text-[#35c9ff] group-hover:scale-110 transition">
+                        <Scale className="w-3.5 h-3.5" />
+                      </div>
+                      <span>{lang === 'ht' ? 'Regleman & Transparans' : lang === 'fr' ? 'Règlements & Confidentialité' : lang === 'es' ? 'Políticas y Términos' : 'Policies & Transparency'}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -309,10 +333,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenDev, onOpenDownload, liveU
                 {t.nav.security}
               </button>
               <button
-                onClick={() => scrollTo('preview')}
+                onClick={() => scrollTo('temwayaj')}
                 className="text-left py-2 px-3 rounded-lg hover:bg-[#071d42] hover:text-white transition cursor-pointer"
               >
-                {t.nav.preview}
+                {lang === 'ht' ? 'Temwayaj' : lang === 'fr' ? 'Témoignages' : lang === 'es' ? 'Testimonios' : 'Testimonials'}
               </button>
               <button
                 onClick={() => scrollTo('download')}
@@ -325,6 +349,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenDev, onOpenDownload, liveU
                 className="text-left py-2 px-3 rounded-lg hover:bg-[#071d42] hover:text-white transition cursor-pointer"
               >
                 {t.nav.contact}
+              </button>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenPolicies?.('privacy');
+                }}
+                className="text-left py-2 px-3 rounded-lg hover:bg-[#071d42] text-[#35c9ff] hover:text-white transition cursor-pointer flex items-center gap-2 border border-cyan-500/20"
+              >
+                <Scale className="w-4 h-4 text-[#35c9ff]" />
+                <span>{lang === 'ht' ? 'Regleman & Transparans Sit la' : lang === 'fr' ? 'Règlements & Confidentialité' : lang === 'es' ? 'Políticas y Términos' : 'Policies & Transparency'}</span>
               </button>
             </div>
 

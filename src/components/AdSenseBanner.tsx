@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { AdSenseConfig } from '../types';
-import { Sparkles, Eye, ShieldCheck } from 'lucide-react';
+import { Eye, ShieldCheck } from 'lucide-react';
 
 interface AdSenseBannerProps {
   config: AdSenseConfig;
@@ -86,7 +86,6 @@ export const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
             /* Professional AdSense Placeholder for Preview / Testing */
             <div className="w-full py-4 px-3 rounded-xl border border-dashed border-cyan-400/30 bg-black/40 text-center flex flex-col items-center justify-center gap-2">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#35c9ff]/10 border border-cyan-400/30 text-xs font-bold text-[#35c9ff]">
-                <Sparkles className="w-3.5 h-3.5" />
                 <span>Espas Anons Google AdSense ({positionLabel})</span>
               </div>
               <p className="text-xs text-blue-200/70 max-w-md">

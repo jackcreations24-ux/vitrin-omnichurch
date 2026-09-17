@@ -9,7 +9,19 @@ import {
   onSnapshot,
   increment,
   updateDoc,
+  collection,
+  query,
+  orderBy,
+  deleteDoc,
 } from 'firebase/firestore';
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged,
+  User,
+} from 'firebase/auth';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { DownloadLinks, SiteTextsConfig, AdSenseConfig, SEOConfig } from '../types';
 import {
@@ -22,6 +34,29 @@ import {
 
 // Inisyalize aplikasyon Firebase
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+
+// Inisyalize Firebase Auth ak Google Auth Provider
+export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+export async function signInWithGoogle(): Promise<User> {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    return result.user;
+  } catch (err: unknown) {
+    console.error('Erè koneksyon Google:', err);
+    throw err;
+  }
+}
+
+export async function signOutUser(): Promise<void> {
+  await signOut(auth);
+}
+
+export function subscribeToAuthChange(callback: (user: User | null) => void) {
+  return onAuthStateChanged(auth, callback);
+}
 
 // Inisyalize Firestore ak auto long polling pou evite pwoblèm streaming/proxy sou navigatè/iframe
 export const db = (() => {
@@ -414,3 +449,139 @@ export async function trackCloudDownload(platform: 'mobile' | 'pc' | 'mac'): Pro
     console.debug('Cloud download track error:', e);
   }
 }
+
+/**
+ * =========================================================================
+ * 5. JESTYON AVI & NÒT AN TAN REYÈL (REAL-TIME REVIEWS & RATINGS)
+ * =========================================================================
+ */
+export interface AppReview {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail?: string;
+  userPhoto?: string;
+  rating: number; // 1 to 5
+  comment: string;
+  role?: string;
+  church?: string;
+  createdAt: string;
+  verified: boolean;
+}
+
+const REVIEWS_STORAGE_KEY = 'omnichurch_reviews_cache';
+
+export function subscribeToRealtimeReviews(
+  onUpdate: (reviews: AppReview[]) => void,
+  onError?: (err: unknown) => void
+) {
+  const q = query(collection(db, 'reviews'), orderBy('createdAt', 'desc'));
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const list: AppReview[] = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          userId: data.userId || '',
+          userName: data.userName || 'Lidè Legliz',
+          userEmail: data.userEmail || '',
+          userPhoto: data.userPhoto || '',
+          rating: typeof data.rating === 'number' ? data.rating : 5,
+          comment: data.comment || '',
+          role: data.role || 'Lidè',
+          church: data.church || 'Kominote Kretyèn',
+          createdAt: data.createdAt || new Date().toISOString(),
+          verified: data.verified !== false,
+        });
+      });
+
+      try {
+        localStorage.setItem(REVIEWS_STORAGE_KEY, JSON.stringify(list));
+      } catch {
+        // ignore
+      }
+      onUpdate(list);
+    },
+    (err) => {
+      console.warn('Realtime reviews stream error, using local fallback:', err);
+      try {
+        const cached = localStorage.getItem(REVIEWS_STORAGE_KEY);
+        if (cached) {
+          onUpdate(JSON.parse(cached));
+        }
+      } catch {
+        // ignore
+      }
+      if (onError) onError(err);
+    }
+  );
+}
+
+export async function submitRealtimeReview(reviewData: {
+  userId: string;
+  userName: string;
+  userEmail?: string;
+  userPhoto?: string;
+  rating: number;
+  comment: string;
+  role?: string;
+  church?: string;
+}): Promise<string> {
+  const colRef = collection(db, 'reviews');
+  const docRef = doc(colRef);
+  const newReview: Omit<AppReview, 'id'> = {
+    userId: reviewData.userId,
+    userName: reviewData.userName,
+    userEmail: reviewData.userEmail || '',
+    userPhoto: reviewData.userPhoto || '',
+    rating: Math.max(1, Math.min(5, reviewData.rating)),
+    comment: reviewData.comment.trim(),
+    role: reviewData.role?.trim() || 'Lidè / Manm',
+    church: reviewData.church?.trim() || 'Asanble Kretyèn',
+    createdAt: new Date().toISOString(),
+    verified: true,
+  };
+
+  try {
+    await setDoc(docRef, newReview);
+    return docRef.id;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, 'reviews');
+    // Fallback: save locally if Firestore error
+    const cached: AppReview[] = (() => {
+      try {
+        return JSON.parse(localStorage.getItem(REVIEWS_STORAGE_KEY) || '[]');
+      } catch {
+        return [];
+      }
+    })();
+    cached.unshift({ id: docRef.id, ...newReview });
+    try {
+      localStorage.setItem(REVIEWS_STORAGE_KEY, JSON.stringify(cached));
+    } catch {
+      // ignore
+    }
+    return docRef.id;
+  }
+}
+
+export async function deleteRealtimeReview(reviewId: string): Promise<void> {
+  try {
+    const docRef = doc(db, 'reviews', reviewId);
+    await deleteDoc(docRef);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, `reviews/${reviewId}`);
+    // Also clean from local cache
+    try {
+      const cached: AppReview[] = JSON.parse(localStorage.getItem(REVIEWS_STORAGE_KEY) || '[]');
+      const filtered = cached.filter((r) => r.id !== reviewId);
+      localStorage.setItem(REVIEWS_STORAGE_KEY, JSON.stringify(filtered));
+    } catch {
+      // ignore
+    }
+  }
+}
+

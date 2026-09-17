@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, QrCode, Sparkles, CheckCircle2, Award, Church, RotateCw } from 'lucide-react';
+import { ShieldCheck, QrCode, CheckCircle2, Award, Church, RotateCw } from 'lucide-react';
 
 export const VirtualMembershipCard: React.FC = () => {
   // isAutoFlipping controls whether the automatic continuous spin is active
@@ -83,9 +83,8 @@ export const VirtualMembershipCard: React.FC = () => {
             </div>
 
             <div className="flex-1 min-w-0">
-              <div className="text-[11px] sm:text-xs font-black text-white truncate flex items-center gap-1">
+              <div className="text-[11px] sm:text-xs font-black text-white truncate">
                 <span>Jackson Charles</span>
-                <Sparkles className="w-2.5 h-2.5 text-[#35c9ff] shrink-0" />
               </div>
               <div className="text-[9px] text-blue-200/80 font-medium truncate">
                 Koral &amp; Medya

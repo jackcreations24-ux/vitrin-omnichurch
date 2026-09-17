@@ -10,14 +10,18 @@ import { HeroSection } from './components/HeroSection';
 import { FeaturesSection } from './components/FeaturesSection';
 import { InstallGuideSection } from './components/InstallGuideSection';
 import { TechSecuritySection } from './components/TechSecuritySection';
-import { ChurchDemoPreview } from './components/ChurchDemoPreview';
+import { TestimonialsSection } from './components/TestimonialsSection';
 import { DownloadSection } from './components/DownloadSection';
 import { ContactSection } from './components/ContactSection';
 import { DevDashboardModal } from './components/DevDashboardModal';
 import { DownloadModal } from './components/DownloadModal';
 import { PcInstallGuideModal } from './components/PcInstallGuideModal';
 import { SitemapModal } from './components/SitemapModal';
+import { PoliciesModal, PolicyTab } from './components/PoliciesModal';
+import { CookieConsentBanner } from './components/CookieConsentBanner';
+import { DownloadToast } from './components/DownloadToast';
 import { AdSenseBanner } from './components/AdSenseBanner';
+import { ScrollToTopButton } from './components/ScrollToTopButton';
 import { detectArchitecture } from './utils/deviceDetect';
 import {
   loadSavedLinks,
@@ -67,8 +71,20 @@ export default function App() {
   const [pcGuideModalOpen, setPcGuideModalOpen] = useState(false);
   const [devModalOpen, setDevModalOpen] = useState(false);
   const [sitemapModalOpen, setSitemapModalOpen] = useState(false);
+  const [policiesModalOpen, setPoliciesModalOpen] = useState(false);
+  const [policiesTab, setPoliciesTab] = useState<PolicyTab>('privacy');
   const [downloadModalOpen, setDownloadModalOpen] = useState(false);
   const [downloadPlatform, setDownloadPlatform] = useState<'mobile' | 'pc'>('mobile');
+  const [downloadToast, setDownloadToast] = useState<{
+    open: boolean;
+    platform: 'mobile' | 'pc';
+    name: string;
+  } | null>(null);
+
+  const handleOpenPolicies = useCallback((tab: PolicyTab = 'privacy') => {
+    setPoliciesTab(tab);
+    setPoliciesModalOpen(true);
+  }, []);
 
   // Dynamic synchronized version across all supported languages
   const currentVersionBadge = formatLocalizedVersionBadge(siteTexts?.heroBadge, lang);
@@ -117,16 +133,32 @@ export default function App() {
     };
   }, []);
 
-  // Check URL hash or path for direct sitemap modal invocation
+  // Check URL hash or path for direct sitemap & official policies modal invocation
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const path = window.location.pathname.toLowerCase();
-      const hash = window.location.hash.toLowerCase();
-      if (hash === '#sitemap' || path.includes('sitemap')) {
-        setSitemapModalOpen(true);
-      }
+      const handleHashOrQuery = () => {
+        const path = window.location.pathname.toLowerCase();
+        const hash = window.location.hash.toLowerCase();
+        const search = window.location.search.toLowerCase();
+
+        if (hash === '#sitemap' || path.includes('sitemap')) {
+          setSitemapModalOpen(true);
+        } else if (hash === '#privacy' || search.includes('sec=privacy')) {
+          handleOpenPolicies('privacy');
+        } else if (hash === '#terms' || search.includes('sec=terms')) {
+          handleOpenPolicies('terms');
+        } else if (hash === '#cookies' || search.includes('sec=cookies')) {
+          handleOpenPolicies('cookies');
+        } else if (hash === '#security' || hash === '#transparency' || search.includes('sec=transparency')) {
+          handleOpenPolicies('security');
+        }
+      };
+
+      handleHashOrQuery();
+      window.addEventListener('hashchange', handleHashOrQuery);
+      return () => window.removeEventListener('hashchange', handleHashOrQuery);
     }
-  }, []);
+  }, [handleOpenPolicies]);
 
   // Verify and update detected architecture on mount via navigator.platform or navigator.userAgent
   useEffect(() => {
@@ -232,11 +264,12 @@ export default function App() {
     setAnalytics(toAnalyticsState(updatedReal));
   };
 
-  // Track real downloads
+  // Track real downloads & show instant confirmation toast notification
   const handleTrackDownload = useCallback((platform: 'mobile' | 'pc', name: string) => {
     const updatedReal = recordRealDownload(platform, name);
     setAnalytics(toAnalyticsState(updatedReal));
     trackCloudDownload(platform);
+    setDownloadToast({ open: true, platform, name });
   }, []);
 
   // Clear analytics to start fresh at true zero
@@ -285,6 +318,7 @@ export default function App() {
         onOpenDownload={handleOpenDownloadModal}
         liveUsers={analytics.liveUsers}
         versionBadge={currentVersionBadge}
+        onOpenPolicies={handleOpenPolicies}
       />
 
       {/* Main Content Sections */}
@@ -320,6 +354,9 @@ export default function App() {
         {/* Dedicated Offline-First & Data Protection Architecture */}
         <TechSecuritySection />
 
+        {/* Testimonials: Sa lidè legliz yo di */}
+        <TestimonialsSection />
+
         {/* Mid-Content AdSense Banner */}
         {adsense.enabled && (
           <AdSenseBanner
@@ -328,9 +365,6 @@ export default function App() {
             positionLabel="Mid-Content Banner"
           />
         )}
-
-        {/* Interactive Live Church Demo */}
-        <ChurchDemoPreview onOpenDownload={handleOpenDownloadModal} />
 
         {/* Centralized Download Hub with dynamic OS architecture and Smart PC Guide */}
         <DownloadSection
@@ -354,6 +388,7 @@ export default function App() {
       {/* Contact & Footer with Jackson Charles credentials and (c) ZOUTIW */}
       <ContactSection
         siteTexts={siteTexts}
+        onOpenPolicies={handleOpenPolicies}
       />
 
       {/* Developer Dashboard Modal (Links management, Real-time analytics, Blogger XML Theme exporter, SEO & Sitemap) */}
@@ -397,6 +432,31 @@ export default function App() {
         isOpen={sitemapModalOpen}
         onClose={() => setSitemapModalOpen(false)}
       />
+
+      {/* Official Site Policies & Google AdSense Transparency Modal */}
+      <PoliciesModal
+        isOpen={policiesModalOpen}
+        onClose={() => setPoliciesModalOpen(false)}
+        initialTab={policiesTab}
+      />
+
+      {/* Google & Cookie Transparency Consent Banner */}
+      <CookieConsentBanner
+        onOpenPolicies={handleOpenPolicies}
+      />
+
+      {/* Real-time Download Confirmation Toast */}
+      {downloadToast && (
+        <DownloadToast
+          isOpen={downloadToast.open}
+          onClose={() => setDownloadToast(null)}
+          platform={downloadToast.platform}
+          fileName={downloadToast.name}
+        />
+      )}
+
+      {/* Floating Scroll to Top Navigation Button */}
+      <ScrollToTopButton />
     </div>
   );
 }

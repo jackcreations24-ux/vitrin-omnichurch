@@ -9,7 +9,6 @@ import {
   Globe,
   Search,
   CheckCircle2,
-  Sparkles,
 } from 'lucide-react';
 import { generateDynamicSitemap, downloadSitemapXmlFile, SITEMAP_ENTRIES } from '../utils/sitemapGenerator';
 
@@ -153,7 +152,6 @@ export const SitemapModal: React.FC<SitemapModalProps> = ({ isOpen, onClose }) =
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs text-blue-200/70 px-1">
               <span className="font-semibold flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
                 Apèsi Kòd XML la (Fòma Estanda sitemaps.org)
               </span>
               <span className="text-[11px] font-mono text-cyan-300">UTF-8 / XML 1.0</span>

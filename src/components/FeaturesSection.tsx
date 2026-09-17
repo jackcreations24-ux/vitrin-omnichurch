@@ -1,9 +1,10 @@
 import React from 'react';
-import { CreditCard, QrCode, Bell, ShieldCheck, Check, Sparkles, Smartphone } from 'lucide-react';
+import { CreditCard, QrCode, Bell, ShieldCheck, Check, Smartphone } from 'lucide-react';
 import { SiteTextsConfig } from '../types';
 import { DEFAULT_SITE_TEXTS } from '../data/defaultData';
 import { useI18n } from '../i18n/I18nContext';
 import { VirtualMembershipCard } from './VirtualMembershipCard';
+import { resolveSiteTexts } from '../utils/textResolver';
 
 interface FeaturesSectionProps {
   siteTexts?: SiteTextsConfig;
@@ -11,38 +12,38 @@ interface FeaturesSectionProps {
 
 export const FeaturesSection: React.FC<FeaturesSectionProps> = ({ siteTexts }) => {
   const { t, lang } = useI18n();
-  const isCustomEdited = siteTexts && (siteTexts.featuresTitle !== DEFAULT_SITE_TEXTS.featuresTitle || siteTexts.feature1Title !== DEFAULT_SITE_TEXTS.feature1Title);
+  const resolved = resolveSiteTexts(siteTexts, t, lang);
 
-  const eyebrow = (isCustomEdited && lang === 'ht') ? siteTexts.featuresEyebrow : t.features.eyebrow;
-  const title = (isCustomEdited && lang === 'ht') ? siteTexts.featuresTitle : t.features.title;
-  const description = (isCustomEdited && lang === 'ht') ? siteTexts.featuresDescription : t.features.description;
+  const eyebrow = resolved.featuresEyebrow;
+  const title = resolved.featuresTitle;
+  const description = resolved.featuresDescription;
 
   const features = [
     {
       icon: CreditCard,
-      title: (isCustomEdited && lang === 'ht') ? siteTexts.feature1Title : t.features.f1.title,
-      description: (isCustomEdited && lang === 'ht') ? siteTexts.feature1Desc : t.features.f1.desc,
+      title: resolved.feature1Title,
+      description: resolved.feature1Desc,
       badge: t.features.f1.badge,
       benefits: t.features.f1.benefits,
     },
     {
       icon: QrCode,
-      title: (isCustomEdited && lang === 'ht') ? siteTexts.feature2Title : t.features.f2.title,
-      description: (isCustomEdited && lang === 'ht') ? siteTexts.feature2Desc : t.features.f2.desc,
+      title: resolved.feature2Title,
+      description: resolved.feature2Desc,
       badge: t.features.f2.badge,
       benefits: t.features.f2.benefits,
     },
     {
       icon: Bell,
-      title: (isCustomEdited && lang === 'ht') ? siteTexts.feature3Title : t.features.f3.title,
-      description: (isCustomEdited && lang === 'ht') ? siteTexts.feature3Desc : t.features.f3.desc,
+      title: resolved.feature3Title,
+      description: resolved.feature3Desc,
       badge: t.features.f3.badge,
       benefits: t.features.f3.benefits,
     },
     {
       icon: ShieldCheck,
-      title: (isCustomEdited && lang === 'ht') ? siteTexts.feature4Title : t.features.f4.title,
-      description: (isCustomEdited && lang === 'ht') ? siteTexts.feature4Desc : t.features.f4.desc,
+      title: resolved.feature4Title,
+      description: resolved.feature4Desc,
       badge: t.features.f4.badge,
       benefits: t.features.f4.benefits,
     },
@@ -74,7 +75,6 @@ export const FeaturesSection: React.FC<FeaturesSectionProps> = ({ siteTexts }) =
             {/* Left Content */}
             <div className="space-y-4 text-center lg:text-left max-w-xl">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#087cff]/20 text-[#35c9ff] border border-[#35c9ff]/30 text-xs font-extrabold tracking-wide">
-                <Sparkles className="w-3.5 h-3.5 text-cyan-300" />
                 <span>Eksklizif sou OmniChurch</span>
               </div>
 

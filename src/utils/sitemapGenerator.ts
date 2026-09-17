@@ -51,6 +51,30 @@ export const SITEMAP_ENTRIES: SitemapUrlEntry[] = [
     changefreq: 'monthly',
     priority: 0.7,
   },
+  {
+    path: '?sec=privacy',
+    label: 'Politik Konfidansyalite (Privacy Policy - Google Compliant)',
+    changefreq: 'monthly',
+    priority: 0.7,
+  },
+  {
+    path: '?sec=terms',
+    label: 'Kondisyon Itilizasyon (Terms of Service)',
+    changefreq: 'monthly',
+    priority: 0.7,
+  },
+  {
+    path: '?sec=cookies',
+    label: 'Bonbon & Piblisite Google AdSense (Cookies Disclosure)',
+    changefreq: 'monthly',
+    priority: 0.7,
+  },
+  {
+    path: '?sec=transparency',
+    label: 'Transparans & Sekirite Done Legliz (Data Safety)',
+    changefreq: 'monthly',
+    priority: 0.7,
+  },
 ];
 
 /**

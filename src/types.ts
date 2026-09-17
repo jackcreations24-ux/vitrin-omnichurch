@@ -92,6 +92,9 @@ export interface SiteTextsConfig {
 
   // Footer & About
   footerAbout: string;
+
+  // Multi-language custom overrides for each language (ht, fr, en, es)
+  translations?: Partial<Record<'ht' | 'fr' | 'en' | 'es', Partial<Omit<SiteTextsConfig, 'translations'>>>>;
 }
 
 export interface SEOConfig {

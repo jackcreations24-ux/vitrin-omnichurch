@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   Users,
   MessageSquare,
-  Sparkles,
   ArrowDownToLine,
   Cpu,
   HelpCircle,
@@ -21,6 +20,7 @@ import { detectDevice, DeviceDetectionResult } from '../utils/deviceDetect';
 import { DEFAULT_SITE_TEXTS } from '../data/defaultData';
 import { useI18n } from '../i18n/I18nContext';
 import { formatLocalizedVersionBadge } from '../utils/versionHelper';
+import { resolveSiteTexts } from '../utils/textResolver';
 
 interface HeroSectionProps {
   links: DownloadLinks;
@@ -38,23 +38,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onTrackDownload,
 }) => {
   const { t, lang } = useI18n();
-  const dynamicBadge = formatLocalizedVersionBadge(siteTexts?.heroBadge, lang);
-  const isCustomEdited = Boolean(
-    siteTexts && (
-      siteTexts.heroTitleHighlight !== DEFAULT_SITE_TEXTS.heroTitleHighlight ||
-      siteTexts.heroDescription !== DEFAULT_SITE_TEXTS.heroDescription ||
-      siteTexts.heroSubtitle !== DEFAULT_SITE_TEXTS.heroSubtitle
-    )
-  );
+  const resolved = resolveSiteTexts(siteTexts, t, lang);
+  const dynamicBadge = formatLocalizedVersionBadge(resolved.heroBadge, lang);
 
   const texts = {
-    heroEyebrow: (isCustomEdited && lang === 'ht') ? (siteTexts?.heroEyebrow || t.hero.eyebrow) : t.hero.eyebrow,
-    heroEyebrowSub: (isCustomEdited && lang === 'ht') ? (siteTexts?.heroEyebrowSub || t.hero.eyebrowSub) : t.hero.eyebrowSub,
+    ...resolved,
     heroBadge: dynamicBadge,
-    heroTitlePrefix: (isCustomEdited && lang === 'ht') ? (siteTexts?.heroTitlePrefix || t.hero.titlePrefix) : t.hero.titlePrefix,
-    heroTitleHighlight: (isCustomEdited && siteTexts?.heroTitleHighlight) ? siteTexts.heroTitleHighlight : t.hero.titleHighlight,
-    heroSubtitle: (isCustomEdited && lang === 'ht') ? (siteTexts?.heroSubtitle || t.hero.subtitle) : t.hero.subtitle,
-    heroDescription: (isCustomEdited && lang === 'ht') ? (siteTexts?.heroDescription || t.hero.description) : t.hero.description,
   };
 
   const [downloadFeedback, setDownloadFeedback] = useState<string | null>(null);
@@ -119,7 +108,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             {/* Welcome to OmniChurch - Luminous Brand Eyebrow */}
             <div className="flex flex-wrap items-center gap-2.5 relative z-10">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-950/80 via-cyan-950/60 to-blue-950/80 border border-[#35c9ff]/40 shadow-[0_0_20px_rgba(53,201,255,0.25)]">
-                <Sparkles className="w-3.5 h-3.5 text-[#35c9ff] animate-pulse" />
                 <span className="text-xs font-black tracking-widest text-[#35c9ff] uppercase">
                   {texts.heroEyebrow}
                 </span>

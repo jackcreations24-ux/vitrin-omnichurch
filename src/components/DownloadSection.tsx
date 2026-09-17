@@ -5,7 +5,6 @@ import {
   Monitor,
   Download,
   Check,
-  Sparkles,
   Clock,
   Cpu,
   Bell,
@@ -13,6 +12,9 @@ import {
   HelpCircle,
   ChevronRight,
   ShieldCheck,
+  Share2,
+  MessageCircle,
+  Copy,
 } from 'lucide-react';
 import { DownloadLinks, SiteTextsConfig } from '../types';
 import { detectDevice, detectArchitecture, DeviceDetectionResult } from '../utils/deviceDetect';
@@ -20,6 +22,7 @@ import { DEFAULT_SITE_TEXTS } from '../data/defaultData';
 import { PcInstallGuideModal } from './PcInstallGuideModal';
 import { useI18n } from '../i18n/I18nContext';
 import { formatLocalizedVersionBadge } from '../utils/versionHelper';
+import { resolveSiteTexts } from '../utils/textResolver';
 
 interface DownloadSectionProps {
   links: DownloadLinks;
@@ -37,11 +40,11 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({
   onTrackDownload,
 }) => {
   const { t, lang } = useI18n();
-  const currentVersionBadge = formatLocalizedVersionBadge(siteTexts?.heroBadge, lang);
-  const isCustomEdited = siteTexts && (siteTexts.downloadTitle !== DEFAULT_SITE_TEXTS.downloadTitle || siteTexts.downloadSubtitle !== DEFAULT_SITE_TEXTS.downloadSubtitle);
-  const texts = (isCustomEdited && lang === 'ht') ? siteTexts : {
-    downloadTitle: t.download.title,
-    downloadSubtitle: t.download.subtitle,
+  const resolved = resolveSiteTexts(siteTexts, t, lang);
+  const currentVersionBadge = formatLocalizedVersionBadge(resolved.heroBadge, lang);
+  const texts = {
+    downloadTitle: resolved.downloadTitle,
+    downloadSubtitle: resolved.downloadSubtitle,
   };
   const [deviceInfo, setDeviceInfo] = useState<DeviceDetectionResult>(() => detectDevice());
   const [activeDetectedArch, setActiveDetectedArch] = useState<'64' | '32'>(() => {
@@ -53,6 +56,48 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({
   const [isNotified, setIsNotified] = useState(false);
   const [comingSoonToast, setComingSoonToast] = useState<string | null>(null);
   const [localGuideOpen, setLocalGuideOpen] = useState(false);
+  const [copiedShareLink, setCopiedShareLink] = useState(false);
+
+  // Generate share URL and localized text for Facebook & WhatsApp
+  const shareUrl = typeof window !== 'undefined' && window.location.href ? window.location.href : 'https://omnichurch.download';
+  const shareText =
+    lang === 'ht'
+      ? 'Telechaje OmniChurch: Platfòm jesyon legliz pwofesyonèl ak Kat Manm Dijital QR gratis pou PC ak Mobil!'
+      : lang === 'fr'
+      ? 'Téléchargez OmniChurch : Plateforme de gestion d’église professionnelle et Cartes de Membres Numériques QR gratuites pour PC et Mobile !'
+      : lang === 'es'
+      ? '¡Descarga OmniChurch: Plataforma profesional de gestión eclesiástica y Credenciales Digitales QR gratis para PC y Móvil!'
+      : 'Download OmniChurch: Professional church management platform with QR Digital Membership Cards free for PC & Mobile!';
+
+  const handleShareWhatsApp = () => {
+    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`;
+    window.open(waUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleShareFacebook = () => {
+    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
+    window.open(fbUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleCopyShareLink = async () => {
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const input = document.createElement('input');
+        input.value = shareUrl;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+      }
+      setCopiedShareLink(true);
+      setTimeout(() => setCopiedShareLink(false), 2500);
+    } catch {
+      setCopiedShareLink(true);
+      setTimeout(() => setCopiedShareLink(false), 2500);
+    }
+  };
 
   // Detect and synchronize architecture via navigator.platform or navigator.userAgent
   useEffect(() => {
@@ -125,7 +170,6 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14 space-y-3">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-950/60 border border-cyan-400/30 text-[#35c9ff] text-xs font-black tracking-widest uppercase">
-            <Sparkles className="w-3.5 h-3.5 text-[#35c9ff]" />
             <span>Telechajman Santralize</span>
           </div>
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight">
@@ -393,6 +437,81 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({
             </button>
           </div>
 
+        </div>
+
+        {/* Social Share Bar: Pataje sou Facebook / WhatsApp pou Lidè Legliz yo */}
+        <div className="mt-8 p-5 sm:p-6 rounded-[22px] glass border border-[#35c9ff]/30 bg-gradient-to-r from-[#031533]/80 via-[#071d42]/70 to-[#020b1f]/90 flex flex-col lg:flex-row items-center justify-between gap-5 shadow-[0_10px_35px_rgba(8,124,255,0.2)]">
+          <div className="space-y-1 text-center lg:text-left">
+            <div className="flex items-center justify-center lg:justify-start gap-2">
+              <div className="w-7 h-7 rounded-lg bg-[#35c9ff]/15 border border-[#35c9ff]/30 flex items-center justify-center text-[#35c9ff]">
+                <Share2 className="w-4 h-4" />
+              </div>
+              <h3 className="text-sm sm:text-base font-black text-white">
+                {lang === 'ht'
+                  ? 'Pataje OmniChurch ak Manm Legliz Ou a'
+                  : lang === 'fr'
+                  ? 'Partagez OmniChurch avec les Membres de Votre Église'
+                  : lang === 'es'
+                  ? 'Comparta OmniChurch con los Miembros de su Iglesia'
+                  : 'Share OmniChurch with Your Church Members'}
+              </h3>
+            </div>
+            <p className="text-xs text-blue-200/70 max-w-xl">
+              {lang === 'ht'
+                ? 'Lidè legliz yo ka voye lyen telechajman ofisyèl la dirèkteman sou WhatsApp oswa Facebook pou tout fidèl yo ka enstale aplikasyon an fasilman.'
+                : lang === 'fr'
+                ? 'Les dirigeants d’églises peuvent envoyer le lien de téléchargement officiel directement sur WhatsApp ou Facebook pour que les membres installent l’application facilement.'
+                : lang === 'es'
+                ? 'Los líderes pueden compartir el enlace de descarga oficial directamente en WhatsApp o Facebook para que todos los miembros instalen la aplicación fácilmente.'
+                : 'Church leaders can broadcast the official download link directly to WhatsApp or Facebook so all members can install the application with ease.'}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-2.5 w-full lg:w-auto shrink-0">
+            {/* WhatsApp Share Button */}
+            <button
+              type="button"
+              onClick={handleShareWhatsApp}
+              className="flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/50 text-emerald-300 hover:text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.25)] hover:scale-[1.02] cursor-pointer"
+              title="Pataje sou WhatsApp"
+            >
+              <MessageCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>Pataje sou WhatsApp</span>
+            </button>
+
+            {/* Facebook Share Button */}
+            <button
+              type="button"
+              onClick={handleShareFacebook}
+              className="flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl bg-blue-950/80 hover:bg-blue-900 border border-blue-400/50 text-sky-200 hover:text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(59,130,246,0.25)] hover:scale-[1.02] cursor-pointer"
+              title="Pataje sou Facebook"
+            >
+              <svg className="w-4 h-4 fill-current text-[#35c9ff] shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+              </svg>
+              <span>Pataje sou Facebook</span>
+            </button>
+
+            {/* Copy Link Button */}
+            <button
+              type="button"
+              onClick={handleCopyShareLink}
+              className="px-3.5 py-2.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/15 text-blue-200 hover:text-white text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer shrink-0"
+              title="Kopye lyen an"
+            >
+              {copiedShareLink ? (
+                <>
+                  <Check className="w-4 h-4 text-emerald-400" />
+                  <span className="text-emerald-300">Kopye!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4 text-[#35c9ff]" />
+                  <span className="hidden sm:inline">Kopye Lyen</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Email Notification for Coming Soon Releases */}

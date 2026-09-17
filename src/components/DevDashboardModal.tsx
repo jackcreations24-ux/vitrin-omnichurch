@@ -17,7 +17,6 @@ import {
   Eye,
   RotateCcw,
   DollarSign,
-  Sparkles,
   ExternalLink,
   ShieldCheck,
   HelpCircle,
@@ -56,6 +55,7 @@ import {
   getActiveDevAccount,
 } from '../utils/security';
 import { formatLocalizedVersionBadge } from '../utils/versionHelper';
+import { SupportedLang, translations } from '../i18n/translations';
 
 interface DevDashboardModalProps {
   isOpen: boolean;
@@ -107,18 +107,36 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
   const [formAdSense, setFormAdSense] = useState<AdSenseConfig>(adsense);
   const [formTexts, setFormTexts] = useState<SiteTextsConfig>(siteTexts || DEFAULT_SITE_TEXTS);
   const [formSEO, setFormSEO] = useState<SEOConfig>(seo || DEFAULT_SEO);
+  const [activeTextLang, setActiveTextLang] = useState<SupportedLang>('ht');
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [adSaveSuccess, setAdSaveSuccess] = useState(false);
   const [textSaveSuccess, setTextSaveSuccess] = useState(false);
   const [seoSaveSuccess, setSeoSaveSuccess] = useState(false);
 
-  // Ultra-secure 10-second auto-lock / auto-close inactivity timer
-  const [autoCloseCountdown, setAutoCloseCountdown] = useState(10);
+  // Ultra-secure 2-hour auto-lock / auto-close inactivity timer (7200 seconds)
+  const INACTIVITY_TIMEOUT_SECONDS = 2 * 60 * 60; // 2 èdtan (7200 segond)
+  const INACTIVITY_TIMEOUT_MS = INACTIVITY_TIMEOUT_SECONDS * 1000;
+  const [autoCloseCountdown, setAutoCloseCountdown] = useState(INACTIVITY_TIMEOUT_SECONDS);
   const autoCloseTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  const formatCountdownDisplay = (totalSecs: number): string => {
+    if (totalSecs <= 0) return '0s';
+    const hours = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+
+    if (hours > 0) {
+      return `${hours}h ${mins.toString().padStart(2, '0')}m`;
+    }
+    if (mins > 0) {
+      return `${mins}m ${secs.toString().padStart(2, '0')}s`;
+    }
+    return `${secs}s`;
+  };
+
   const resetInactivityTimer = () => {
-    setAutoCloseCountdown(10);
+    setAutoCloseCountdown(INACTIVITY_TIMEOUT_SECONDS);
     if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current);
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
 
@@ -133,12 +151,12 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
       }, 1000);
 
       autoCloseTimerRef.current = setTimeout(() => {
-        // Auto-close and clear sensitive state
+        // Auto-close and clear sensitive state apre 2 èdtan inaktivite
         onClose();
         setIsUnlocked(false);
         setPassword('');
         clearDevSession();
-      }, 10000);
+      }, INACTIVITY_TIMEOUT_MS);
     }
   };
 
@@ -441,17 +459,13 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* 10s Inactivity Auto-Lock Countdown Badge */}
+            {/* 2h Inactivity Auto-Lock Countdown Badge (Kache selon demann devlopè a) */}
             <div
-              className={`px-2.5 py-1 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition-colors ${
-                autoCloseCountdown <= 3
-                  ? 'bg-red-950/80 border border-red-500/50 text-red-400 animate-pulse'
-                  : 'bg-black/50 border border-white/10 text-cyan-300'
-              }`}
-              title="Aksè a pwoteje: panèl la ap fèmen otomatikman apre 10s si pa gen aktivite pou garanti sekirite maksimòm."
+              className="hidden"
+              aria-hidden="true"
             >
               <Clock className="w-3.5 h-3.5" />
-              <span>{autoCloseCountdown}s</span>
+              <span>{formatCountdownDisplay(autoCloseCountdown)}</span>
             </div>
 
             {isUnlocked && (
@@ -1171,6 +1185,55 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                   </div>
                 </div>
 
+                {/* Multilingual Selector Tabs for Site Descriptions & Copy */}
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-[#030d22] via-[#051838] to-[#030d22] border border-[#1b4882] space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h5 className="text-sm font-bold text-white flex items-center gap-2">
+                        <Globe className="w-4 h-4 text-cyan-400" />
+                        <span>Chwazi Lang w ap Modifye Tèks yo:</span>
+                      </h5>
+                      <p className="text-[11px] text-blue-200/60">
+                        Chak lang gen pwòp tèks li. Lè vizitè a chanje lang sou sit la, li pral wè egzakteman sa w mete la a!
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 p-1 rounded-xl bg-black/40 border border-white/10">
+                      {(
+                        [
+                          { code: 'ht' as SupportedLang, flag: '🇭🇹', label: 'Kreyòl' },
+                          { code: 'fr' as SupportedLang, flag: '🇫🇷', label: 'Français' },
+                          { code: 'en' as SupportedLang, flag: '🇺🇸', label: 'English' },
+                          { code: 'es' as SupportedLang, flag: '🇪🇸', label: 'Español' },
+                        ]
+                      ).map((langItem) => {
+                        const isCurrent = activeTextLang === langItem.code;
+                        return (
+                          <button
+                            key={langItem.code}
+                            type="button"
+                            onClick={() => setActiveTextLang(langItem.code)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                              isCurrent
+                                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
+                                : 'text-blue-200/70 hover:text-white hover:bg-white/5'
+                            }`}
+                          >
+                            <span>{langItem.flag}</span>
+                            <span>{langItem.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="text-[11px] text-cyan-300/80 bg-cyan-950/30 border border-cyan-500/20 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                    <span>
+                      W ap modifye kounye a vèsyon <b>{activeTextLang === 'ht' ? '🇭🇹 Kreyòl Ayisyen (Tèks Prensipal)' : activeTextLang === 'fr' ? '🇫🇷 Français' : activeTextLang === 'en' ? '🇺🇸 English' : '🇪🇸 Español'}</b>. Si yon jaden rete vid, sistèm nan pran tradiksyon ofisyèl lang lan otomatikman pou pa janm gen erè.
+                    </span>
+                  </div>
+                </div>
+
                 {/* Section 1: Hero Texts */}
                 <div className="p-4 rounded-2xl bg-[#030d22] border border-[#1b4882]/70 space-y-4">
                   <div className="border-b border-[#1b4882]/50 pb-2">
@@ -1186,8 +1249,28 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                       <label className="text-xs font-bold text-[#bedaff]">Eyebrow (Tèks Anwo Tit la)</label>
                       <input
                         type="text"
-                        value={formTexts.heroEyebrow}
-                        onChange={(e) => setFormTexts({ ...formTexts, heroEyebrow: e.target.value })}
+                        value={
+                          activeTextLang === 'ht'
+                            ? formTexts.heroEyebrow
+                            : (formTexts.translations?.[activeTextLang]?.heroEyebrow ?? translations[activeTextLang]?.hero.eyebrow ?? '')
+                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (activeTextLang === 'ht') {
+                            setFormTexts({ ...formTexts, heroEyebrow: val });
+                          } else {
+                            setFormTexts({
+                              ...formTexts,
+                              translations: {
+                                ...formTexts.translations,
+                                [activeTextLang]: {
+                                  ...formTexts.translations?.[activeTextLang],
+                                  heroEyebrow: val,
+                                },
+                              },
+                            });
+                          }
+                        }}
                         className="w-full bg-[#020712] border border-[#1b4882] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#35c9ff]"
                       />
                     </div>
@@ -1196,14 +1279,34 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                       <label className="text-xs font-bold text-[#bedaff]">Sou-Eyebrow</label>
                       <input
                         type="text"
-                        value={formTexts.heroEyebrowSub}
-                        onChange={(e) => setFormTexts({ ...formTexts, heroEyebrowSub: e.target.value })}
+                        value={
+                          activeTextLang === 'ht'
+                            ? formTexts.heroEyebrowSub
+                            : (formTexts.translations?.[activeTextLang]?.heroEyebrowSub ?? translations[activeTextLang]?.hero.eyebrowSub ?? '')
+                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (activeTextLang === 'ht') {
+                            setFormTexts({ ...formTexts, heroEyebrowSub: val });
+                          } else {
+                            setFormTexts({
+                              ...formTexts,
+                              translations: {
+                                ...formTexts.translations,
+                                [activeTextLang]: {
+                                  ...formTexts.translations?.[activeTextLang],
+                                  heroEyebrowSub: val,
+                                },
+                              },
+                            });
+                          }
+                        }}
                         className="w-full bg-[#020712] border border-[#1b4882] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#35c9ff]"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-[#bedaff]">Badj Vèsyon</label>
+                      <label className="text-xs font-bold text-[#bedaff]">Badj Vèsyon (Seksyon Hero)</label>
                       <input
                         type="text"
                         value={formTexts.heroBadge}
@@ -1216,8 +1319,28 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                       <label className="text-xs font-bold text-[#bedaff]">Tit Prefiks (Blan)</label>
                       <input
                         type="text"
-                        value={formTexts.heroTitlePrefix}
-                        onChange={(e) => setFormTexts({ ...formTexts, heroTitlePrefix: e.target.value })}
+                        value={
+                          activeTextLang === 'ht'
+                            ? formTexts.heroTitlePrefix
+                            : (formTexts.translations?.[activeTextLang]?.heroTitlePrefix ?? translations[activeTextLang]?.hero.titlePrefix ?? '')
+                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (activeTextLang === 'ht') {
+                            setFormTexts({ ...formTexts, heroTitlePrefix: val });
+                          } else {
+                            setFormTexts({
+                              ...formTexts,
+                              translations: {
+                                ...formTexts.translations,
+                                [activeTextLang]: {
+                                  ...formTexts.translations?.[activeTextLang],
+                                  heroTitlePrefix: val,
+                                },
+                              },
+                            });
+                          }
+                        }}
                         className="w-full bg-[#020712] border border-[#1b4882] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#35c9ff]"
                       />
                     </div>
@@ -1226,8 +1349,28 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                       <label className="text-xs font-bold text-[#bedaff]">Tit Prensipal Enpòtan (Ble / Briyan)</label>
                       <input
                         type="text"
-                        value={formTexts.heroTitleHighlight}
-                        onChange={(e) => setFormTexts({ ...formTexts, heroTitleHighlight: e.target.value })}
+                        value={
+                          activeTextLang === 'ht'
+                            ? formTexts.heroTitleHighlight
+                            : (formTexts.translations?.[activeTextLang]?.heroTitleHighlight ?? translations[activeTextLang]?.hero.titleHighlight ?? '')
+                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (activeTextLang === 'ht') {
+                            setFormTexts({ ...formTexts, heroTitleHighlight: val });
+                          } else {
+                            setFormTexts({
+                              ...formTexts,
+                              translations: {
+                                ...formTexts.translations,
+                                [activeTextLang]: {
+                                  ...formTexts.translations?.[activeTextLang],
+                                  heroTitleHighlight: val,
+                                },
+                              },
+                            });
+                          }
+                        }}
                         className="w-full bg-[#020712] border border-[#1b4882] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#35c9ff]"
                       />
                     </div>
@@ -1236,8 +1379,28 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                       <label className="text-xs font-bold text-[#bedaff]">Sou-tit Prensipal</label>
                       <input
                         type="text"
-                        value={formTexts.heroSubtitle}
-                        onChange={(e) => setFormTexts({ ...formTexts, heroSubtitle: e.target.value })}
+                        value={
+                          activeTextLang === 'ht'
+                            ? formTexts.heroSubtitle
+                            : (formTexts.translations?.[activeTextLang]?.heroSubtitle ?? translations[activeTextLang]?.hero.subtitle ?? '')
+                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (activeTextLang === 'ht') {
+                            setFormTexts({ ...formTexts, heroSubtitle: val });
+                          } else {
+                            setFormTexts({
+                              ...formTexts,
+                              translations: {
+                                ...formTexts.translations,
+                                [activeTextLang]: {
+                                  ...formTexts.translations?.[activeTextLang],
+                                  heroSubtitle: val,
+                                },
+                              },
+                            });
+                          }
+                        }}
                         className="w-full bg-[#020712] border border-[#1b4882] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#35c9ff]"
                       />
                     </div>
@@ -1246,8 +1409,28 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                       <label className="text-xs font-bold text-[#bedaff]">Gwo Deskripsyon Prensipal (Hero Description)</label>
                       <textarea
                         rows={3}
-                        value={formTexts.heroDescription}
-                        onChange={(e) => setFormTexts({ ...formTexts, heroDescription: e.target.value })}
+                        value={
+                          activeTextLang === 'ht'
+                            ? formTexts.heroDescription
+                            : (formTexts.translations?.[activeTextLang]?.heroDescription ?? translations[activeTextLang]?.hero.description ?? '')
+                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (activeTextLang === 'ht') {
+                            setFormTexts({ ...formTexts, heroDescription: val });
+                          } else {
+                            setFormTexts({
+                              ...formTexts,
+                              translations: {
+                                ...formTexts.translations,
+                                [activeTextLang]: {
+                                  ...formTexts.translations?.[activeTextLang],
+                                  heroDescription: val,
+                                },
+                              },
+                            });
+                          }
+                        }}
                         className="w-full bg-[#020712] border border-[#1b4882] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#35c9ff] leading-relaxed"
                       />
                     </div>
@@ -1270,8 +1453,28 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                         <label className="text-xs font-bold text-[#bedaff]">Tit Seksyon Karakteristik</label>
                         <input
                           type="text"
-                          value={formTexts.featuresTitle}
-                          onChange={(e) => setFormTexts({ ...formTexts, featuresTitle: e.target.value })}
+                          value={
+                            activeTextLang === 'ht'
+                              ? formTexts.featuresTitle
+                              : (formTexts.translations?.[activeTextLang]?.featuresTitle ?? translations[activeTextLang]?.features.title ?? '')
+                          }
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (activeTextLang === 'ht') {
+                              setFormTexts({ ...formTexts, featuresTitle: val });
+                            } else {
+                              setFormTexts({
+                                ...formTexts,
+                                translations: {
+                                  ...formTexts.translations,
+                                  [activeTextLang]: {
+                                    ...formTexts.translations?.[activeTextLang],
+                                    featuresTitle: val,
+                                  },
+                                },
+                              });
+                            }
+                          }}
                           className="w-full bg-[#020712] border border-[#1b4882] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#35c9ff]"
                         />
                       </div>
@@ -1279,8 +1482,28 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                         <label className="text-xs font-bold text-[#bedaff]">Deskripsyon Seksyon Karakteristik</label>
                         <input
                           type="text"
-                          value={formTexts.featuresDescription}
-                          onChange={(e) => setFormTexts({ ...formTexts, featuresDescription: e.target.value })}
+                          value={
+                            activeTextLang === 'ht'
+                              ? formTexts.featuresDescription
+                              : (formTexts.translations?.[activeTextLang]?.featuresDescription ?? translations[activeTextLang]?.features.description ?? '')
+                          }
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (activeTextLang === 'ht') {
+                              setFormTexts({ ...formTexts, featuresDescription: val });
+                            } else {
+                              setFormTexts({
+                                ...formTexts,
+                                translations: {
+                                  ...formTexts.translations,
+                                  [activeTextLang]: {
+                                    ...formTexts.translations?.[activeTextLang],
+                                    featuresDescription: val,
+                                  },
+                                },
+                              });
+                            }
+                          }}
                           className="w-full bg-[#020712] border border-[#1b4882] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#35c9ff]"
                         />
                       </div>
@@ -1293,15 +1516,55 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                         <div className="text-xs font-bold text-cyan-300">Kat 1: Jesyon Manm</div>
                         <input
                           type="text"
-                          value={formTexts.feature1Title}
-                          onChange={(e) => setFormTexts({ ...formTexts, feature1Title: e.target.value })}
+                          value={
+                            activeTextLang === 'ht'
+                              ? formTexts.feature1Title
+                              : (formTexts.translations?.[activeTextLang]?.feature1Title ?? translations[activeTextLang]?.features.f1.title ?? '')
+                          }
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (activeTextLang === 'ht') {
+                              setFormTexts({ ...formTexts, feature1Title: val });
+                            } else {
+                              setFormTexts({
+                                ...formTexts,
+                                translations: {
+                                  ...formTexts.translations,
+                                  [activeTextLang]: {
+                                    ...formTexts.translations?.[activeTextLang],
+                                    feature1Title: val,
+                                  },
+                                },
+                              });
+                            }
+                          }}
                           className="w-full bg-[#020712] border border-[#1b4882] rounded-lg px-2.5 py-1.5 text-xs text-white font-semibold"
                           placeholder="Tit Kat 1"
                         />
                         <textarea
                           rows={2}
-                          value={formTexts.feature1Desc}
-                          onChange={(e) => setFormTexts({ ...formTexts, feature1Desc: e.target.value })}
+                          value={
+                            activeTextLang === 'ht'
+                              ? formTexts.feature1Desc
+                              : (formTexts.translations?.[activeTextLang]?.feature1Desc ?? translations[activeTextLang]?.features.f1.desc ?? '')
+                          }
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (activeTextLang === 'ht') {
+                              setFormTexts({ ...formTexts, feature1Desc: val });
+                            } else {
+                              setFormTexts({
+                                ...formTexts,
+                                translations: {
+                                  ...formTexts.translations,
+                                  [activeTextLang]: {
+                                    ...formTexts.translations?.[activeTextLang],
+                                    feature1Desc: val,
+                                  },
+                                },
+                              });
+                            }
+                          }}
                           className="w-full bg-[#020712] border border-[#1b4882] rounded-lg px-2.5 py-1.5 text-xs text-blue-200/80"
                           placeholder="Deskripsyon Kat 1"
                         />
@@ -1312,15 +1575,55 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                         <div className="text-xs font-bold text-blue-300">Kat 2: Kominikasyon &amp; SMS</div>
                         <input
                           type="text"
-                          value={formTexts.feature2Title}
-                          onChange={(e) => setFormTexts({ ...formTexts, feature2Title: e.target.value })}
+                          value={
+                            activeTextLang === 'ht'
+                              ? formTexts.feature2Title
+                              : (formTexts.translations?.[activeTextLang]?.feature2Title ?? translations[activeTextLang]?.features.f2.title ?? '')
+                          }
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (activeTextLang === 'ht') {
+                              setFormTexts({ ...formTexts, feature2Title: val });
+                            } else {
+                              setFormTexts({
+                                ...formTexts,
+                                translations: {
+                                  ...formTexts.translations,
+                                  [activeTextLang]: {
+                                    ...formTexts.translations?.[activeTextLang],
+                                    feature2Title: val,
+                                  },
+                                },
+                              });
+                            }
+                          }}
                           className="w-full bg-[#020712] border border-[#1b4882] rounded-lg px-2.5 py-1.5 text-xs text-white font-semibold"
                           placeholder="Tit Kat 2"
                         />
                         <textarea
                           rows={2}
-                          value={formTexts.feature2Desc}
-                          onChange={(e) => setFormTexts({ ...formTexts, feature2Desc: e.target.value })}
+                          value={
+                            activeTextLang === 'ht'
+                              ? formTexts.feature2Desc
+                              : (formTexts.translations?.[activeTextLang]?.feature2Desc ?? translations[activeTextLang]?.features.f2.desc ?? '')
+                          }
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (activeTextLang === 'ht') {
+                              setFormTexts({ ...formTexts, feature2Desc: val });
+                            } else {
+                              setFormTexts({
+                                ...formTexts,
+                                translations: {
+                                  ...formTexts.translations,
+                                  [activeTextLang]: {
+                                    ...formTexts.translations?.[activeTextLang],
+                                    feature2Desc: val,
+                                  },
+                                },
+                              });
+                            }
+                          }}
                           className="w-full bg-[#020712] border border-[#1b4882] rounded-lg px-2.5 py-1.5 text-xs text-blue-200/80"
                           placeholder="Deskripsyon Kat 2"
                         />
@@ -1331,15 +1634,55 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                         <div className="text-xs font-bold text-purple-300">Kat 3: Evènman &amp; Kil</div>
                         <input
                           type="text"
-                          value={formTexts.feature3Title}
-                          onChange={(e) => setFormTexts({ ...formTexts, feature3Title: e.target.value })}
+                          value={
+                            activeTextLang === 'ht'
+                              ? formTexts.feature3Title
+                              : (formTexts.translations?.[activeTextLang]?.feature3Title ?? translations[activeTextLang]?.features.f3.title ?? '')
+                          }
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (activeTextLang === 'ht') {
+                              setFormTexts({ ...formTexts, feature3Title: val });
+                            } else {
+                              setFormTexts({
+                                ...formTexts,
+                                translations: {
+                                  ...formTexts.translations,
+                                  [activeTextLang]: {
+                                    ...formTexts.translations?.[activeTextLang],
+                                    feature3Title: val,
+                                  },
+                                },
+                              });
+                            }
+                          }}
                           className="w-full bg-[#020712] border border-[#1b4882] rounded-lg px-2.5 py-1.5 text-xs text-white font-semibold"
                           placeholder="Tit Kat 3"
                         />
                         <textarea
                           rows={2}
-                          value={formTexts.feature3Desc}
-                          onChange={(e) => setFormTexts({ ...formTexts, feature3Desc: e.target.value })}
+                          value={
+                            activeTextLang === 'ht'
+                              ? formTexts.feature3Desc
+                              : (formTexts.translations?.[activeTextLang]?.feature3Desc ?? translations[activeTextLang]?.features.f3.desc ?? '')
+                          }
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (activeTextLang === 'ht') {
+                              setFormTexts({ ...formTexts, feature3Desc: val });
+                            } else {
+                              setFormTexts({
+                                ...formTexts,
+                                translations: {
+                                  ...formTexts.translations,
+                                  [activeTextLang]: {
+                                    ...formTexts.translations?.[activeTextLang],
+                                    feature3Desc: val,
+                                  },
+                                },
+                              });
+                            }
+                          }}
                           className="w-full bg-[#020712] border border-[#1b4882] rounded-lg px-2.5 py-1.5 text-xs text-blue-200/80"
                           placeholder="Deskripsyon Kat 3"
                         />
@@ -1350,15 +1693,55 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                         <div className="text-xs font-bold text-emerald-300">Kat 4: Rapò &amp; Analiz</div>
                         <input
                           type="text"
-                          value={formTexts.feature4Title}
-                          onChange={(e) => setFormTexts({ ...formTexts, feature4Title: e.target.value })}
+                          value={
+                            activeTextLang === 'ht'
+                              ? formTexts.feature4Title
+                              : (formTexts.translations?.[activeTextLang]?.feature4Title ?? translations[activeTextLang]?.features.f4.title ?? '')
+                          }
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (activeTextLang === 'ht') {
+                              setFormTexts({ ...formTexts, feature4Title: val });
+                            } else {
+                              setFormTexts({
+                                ...formTexts,
+                                translations: {
+                                  ...formTexts.translations,
+                                  [activeTextLang]: {
+                                    ...formTexts.translations?.[activeTextLang],
+                                    feature4Title: val,
+                                  },
+                                },
+                              });
+                            }
+                          }}
                           className="w-full bg-[#020712] border border-[#1b4882] rounded-lg px-2.5 py-1.5 text-xs text-white font-semibold"
                           placeholder="Tit Kat 4"
                         />
                         <textarea
                           rows={2}
-                          value={formTexts.feature4Desc}
-                          onChange={(e) => setFormTexts({ ...formTexts, feature4Desc: e.target.value })}
+                          value={
+                            activeTextLang === 'ht'
+                              ? formTexts.feature4Desc
+                              : (formTexts.translations?.[activeTextLang]?.feature4Desc ?? translations[activeTextLang]?.features.f4.desc ?? '')
+                          }
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (activeTextLang === 'ht') {
+                              setFormTexts({ ...formTexts, feature4Desc: val });
+                            } else {
+                              setFormTexts({
+                                ...formTexts,
+                                translations: {
+                                  ...formTexts.translations,
+                                  [activeTextLang]: {
+                                    ...formTexts.translations?.[activeTextLang],
+                                    feature4Desc: val,
+                                  },
+                                },
+                              });
+                            }
+                          }}
                           className="w-full bg-[#020712] border border-[#1b4882] rounded-lg px-2.5 py-1.5 text-xs text-blue-200/80"
                           placeholder="Deskripsyon Kat 4"
                         />
@@ -1382,8 +1765,28 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                       <label className="text-xs font-bold text-[#bedaff]">Tit Seksyon Telechajman</label>
                       <input
                         type="text"
-                        value={formTexts.downloadTitle}
-                        onChange={(e) => setFormTexts({ ...formTexts, downloadTitle: e.target.value })}
+                        value={
+                          activeTextLang === 'ht'
+                            ? formTexts.downloadTitle
+                            : (formTexts.translations?.[activeTextLang]?.downloadTitle ?? translations[activeTextLang]?.download.title ?? '')
+                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (activeTextLang === 'ht') {
+                            setFormTexts({ ...formTexts, downloadTitle: val });
+                          } else {
+                            setFormTexts({
+                              ...formTexts,
+                              translations: {
+                                ...formTexts.translations,
+                                [activeTextLang]: {
+                                  ...formTexts.translations?.[activeTextLang],
+                                  downloadTitle: val,
+                                },
+                              },
+                            });
+                          }
+                        }}
                         className="w-full bg-[#020712] border border-[#1b4882] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#35c9ff]"
                       />
                     </div>
@@ -1392,8 +1795,28 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                       <label className="text-xs font-bold text-[#bedaff]">Sou-tit Seksyon Telechajman</label>
                       <input
                         type="text"
-                        value={formTexts.downloadSubtitle}
-                        onChange={(e) => setFormTexts({ ...formTexts, downloadSubtitle: e.target.value })}
+                        value={
+                          activeTextLang === 'ht'
+                            ? formTexts.downloadSubtitle
+                            : (formTexts.translations?.[activeTextLang]?.downloadSubtitle ?? translations[activeTextLang]?.download.subtitle ?? '')
+                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (activeTextLang === 'ht') {
+                            setFormTexts({ ...formTexts, downloadSubtitle: val });
+                          } else {
+                            setFormTexts({
+                              ...formTexts,
+                              translations: {
+                                ...formTexts.translations,
+                                [activeTextLang]: {
+                                  ...formTexts.translations?.[activeTextLang],
+                                  downloadSubtitle: val,
+                                },
+                              },
+                            });
+                          }
+                        }}
                         className="w-full bg-[#020712] border border-[#1b4882] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#35c9ff]"
                       />
                     </div>
@@ -1402,8 +1825,28 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                       <label className="text-xs font-bold text-[#bedaff]">Deskripsyon A Pwopo nan Pye Paj la (Footer About)</label>
                       <textarea
                         rows={2}
-                        value={formTexts.footerAbout}
-                        onChange={(e) => setFormTexts({ ...formTexts, footerAbout: e.target.value })}
+                        value={
+                          activeTextLang === 'ht'
+                            ? formTexts.footerAbout
+                            : (formTexts.translations?.[activeTextLang]?.footerAbout ?? translations[activeTextLang]?.footer.about ?? '')
+                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (activeTextLang === 'ht') {
+                            setFormTexts({ ...formTexts, footerAbout: val });
+                          } else {
+                            setFormTexts({
+                              ...formTexts,
+                              translations: {
+                                ...formTexts.translations,
+                                [activeTextLang]: {
+                                  ...formTexts.translations?.[activeTextLang],
+                                  footerAbout: val,
+                                },
+                              },
+                            });
+                          }
+                        }}
                         className="w-full bg-[#020712] border border-[#1b4882] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#35c9ff] leading-relaxed"
                       />
                     </div>
@@ -1515,7 +1958,6 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                 <div className="space-y-2 p-4 rounded-2xl bg-black/40 border border-white/10">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <label className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                       <span>ID Kliyan AdSense (Publisher ID)</span>
                     </label>
                     <a
@@ -1709,6 +2151,7 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                   </div>
                   <ul className="list-disc list-inside space-y-1 text-[11px] text-amber-100/80">
                     <li><b>Etikèt Obligatwa:</b> Tout espas gen etikèt transparan &quot;PIBLISITE / ADVERTISEMENT&quot; otomatikman.</li>
+                    <li><b>Règleman &amp; Transparans Ofisyèl:</b> Sit la gen Politik Konfidansyalite, Kondisyon Itilizasyon, Deklarasyon Bonbon (Cookies/AdSense), ak Sekirite Done ki disponib pou Google ka aksepte sit la san okenn rejè.</li>
                     <li><b>Pa janm klike sou pwòp anons ou:</b> Google ka bloke kont lan si gen fo klik.</li>
                     <li><b>Zewo Pwoblèm XML sou Blogger:</b> Kòd la entegre nan fason ki respekte 100% règleman Blogger san okenn erè XML.</li>
                   </ul>

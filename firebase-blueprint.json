@@ -68,6 +68,25 @@
       "properties": {
         "status": { "type": "string" }
       }
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Avi ak nòt reyèl ki soti dirèkteman nan men lidè ak manm ki konekte ak kont Google yo",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "userPhoto": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "role": { "type": "string" },
+        "church": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "verified": { "type": "boolean" }
+      },
+      "required": ["userId", "userName", "rating", "comment", "createdAt"]
     }
   },
   "firestore": {
@@ -82,6 +101,10 @@
     "/analytics/{metricId}": {
       "schema": { "$ref": "#/entities/GlobalAnalytics" },
       "description": "Estatistik vizit ak telechajman an tan reyèl"
+    },
+    "/reviews/{reviewId}": {
+      "schema": { "$ref": "#/entities/Review" },
+      "description": "Koleksyon tout avi ak nòt reyèl an tan reyèl"
     }
   }
 }

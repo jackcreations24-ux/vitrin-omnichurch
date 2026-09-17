@@ -1,21 +1,20 @@
 import React from 'react';
-import { Mail, MessageCircle, Send, ArrowUp, Heart, ShieldCheck } from 'lucide-react';
+import { Mail, MessageCircle, Send, Heart, ShieldCheck, Shield, FileText, Cookie, Scale } from 'lucide-react';
 import { DEV_INFO, DEFAULT_SITE_TEXTS } from '../data/defaultData';
 import { SiteTextsConfig } from '../types';
 import { useI18n } from '../i18n/I18nContext';
+import { resolveSiteTexts } from '../utils/textResolver';
+import { PolicyTab } from './PoliciesModal';
 
 interface ContactSectionProps {
   siteTexts?: SiteTextsConfig;
+  onOpenPolicies?: (tab?: PolicyTab) => void;
 }
 
-export const ContactSection: React.FC<ContactSectionProps> = ({ siteTexts }) => {
+export const ContactSection: React.FC<ContactSectionProps> = ({ siteTexts, onOpenPolicies }) => {
   const { t, lang } = useI18n();
-  const isCustomEdited = siteTexts && siteTexts.footerAbout !== DEFAULT_SITE_TEXTS.footerAbout;
-  const footerAboutText = (isCustomEdited && lang === 'ht') ? siteTexts.footerAbout : t.footer.about;
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const resolved = resolveSiteTexts(siteTexts, t, lang);
+  const footerAboutText = resolved.footerAbout;
 
   return (
     <footer id="contact" className="relative z-10 border-t border-white/10 bg-[var(--bg)]/95 pt-12 sm:pt-16 pb-12 overflow-hidden">
@@ -89,8 +88,8 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ siteTexts }) => 
 
         </div>
 
-        {/* Footer Bottom */}
-        <div className="mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-blue-200/60">
+        {/* Footer Bottom with Copyright and Official Google Transparency & Policy Links */}
+        <div className="mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-blue-200/60">
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 select-none text-center sm:text-left">
             <span>
               {t.footer.rights}
@@ -101,14 +100,45 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ siteTexts }) => 
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Official Google Compliance & Site Transparency Links */}
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-[11px] sm:text-xs">
             <button
-              onClick={scrollToTop}
-              className="btn-secondary p-2.5 rounded-xl text-blue-200/80 hover:text-white transition flex items-center gap-1.5 font-bold cursor-pointer"
-              title={t.footer.backToTop}
+              type="button"
+              onClick={() => onOpenPolicies?.('privacy')}
+              className="text-blue-200/70 hover:text-[#35c9ff] transition cursor-pointer flex items-center gap-1"
             >
-              <ArrowUp className="w-4 h-4 text-[#35c9ff]" />
-              <span className="hidden sm:inline">{t.footer.backToTop}</span>
+              <Shield className="w-3.5 h-3.5 text-[#35c9ff]" />
+              <span>{lang === 'ht' ? 'Politik Konfidansyalite' : lang === 'fr' ? 'Confidentialité' : lang === 'es' ? 'Privacidad' : 'Privacy Policy'}</span>
+            </button>
+            <span className="text-white/20 select-none">•</span>
+
+            <button
+              type="button"
+              onClick={() => onOpenPolicies?.('terms')}
+              className="text-blue-200/70 hover:text-[#35c9ff] transition cursor-pointer flex items-center gap-1"
+            >
+              <FileText className="w-3.5 h-3.5 text-[#35c9ff]" />
+              <span>{lang === 'ht' ? 'Kondisyon Itilizasyon' : lang === 'fr' ? 'Conditions' : lang === 'es' ? 'Términos' : 'Terms of Service'}</span>
+            </button>
+            <span className="text-white/20 select-none">•</span>
+
+            <button
+              type="button"
+              onClick={() => onOpenPolicies?.('cookies')}
+              className="text-blue-200/70 hover:text-amber-400 transition cursor-pointer flex items-center gap-1"
+            >
+              <Cookie className="w-3.5 h-3.5 text-amber-400" />
+              <span>{lang === 'ht' ? 'Bonbon (Cookies)' : 'Cookies & Ads'}</span>
+            </button>
+            <span className="text-white/20 select-none">•</span>
+
+            <button
+              type="button"
+              onClick={() => onOpenPolicies?.('security')}
+              className="text-blue-200/70 hover:text-emerald-400 transition cursor-pointer flex items-center gap-1"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{lang === 'ht' ? 'Transparans Done' : 'Transparency'}</span>
             </button>
           </div>
         </div>
