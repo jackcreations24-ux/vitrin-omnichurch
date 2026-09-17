@@ -1,0 +1,160 @@
+name: Build & Create GitHub Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Tag Vèsyon (egz: v1.0.0)'
+        required: false
+        default: ''
+      title:
+        description: 'Tit Release la'
+        required: false
+        default: ''
+      prerelease:
+        description: 'Èske se yon vèsyon tès (Pre-release)?'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: 'release-${{ github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+  build-and-release:
+    name: Konpile & Pibliye Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Kopye Kòd Sous la (Checkout)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Konfigire Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Enstale Depandans yo
+        run: npm install
+
+      - name: Konpile Pwojè a (Build)
+        run: npm run build
+
+      - name: Detèmine Vèsyon ak Tit Release la
+        id: versioning
+        run: |
+          # 1. Detèmine Tag Vèsyon an
+          INPUT_VERSION="${{ github.event.inputs.version }}"
+          REF_NAME="${{ github.ref_name }}"
+          
+          if [ -n "$INPUT_VERSION" ]; then
+            TAG="$INPUT_VERSION"
+          elif [[ "$REF_NAME" == v* ]]; then
+            TAG="$REF_NAME"
+          else
+            PKG_VER=$(node -p "require('./package.json').version || '1.0.0'")
+            TAG="v$PKG_VER"
+          fi
+
+          # 2. Detèmine Tit Release la
+          INPUT_TITLE="${{ github.event.inputs.title }}"
+          if [ -n "$INPUT_TITLE" ]; then
+            TITLE="$INPUT_TITLE"
+          else
+            TITLE="OmniChurch $TAG — Vèsyon Ofisyèl Pwodiksyon"
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "title=$TITLE" >> "$GITHUB_OUTPUT"
+          echo "Vèsyon chwazi: $TAG"
+          echo "Tit chwazi: $TITLE"
+
+      - name: Jenere Changelog depi Mesaj Commit yo
+        id: changelog
+        run: |
+          echo "Jenerasyon lis chanjman (Changelog)..."
+          
+          # Jwenn dènye tag anvan an si li egziste
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          if [ -n "$PREV_TAG" ]; then
+            echo "Konpare commit yo depi dènye tag: $PREV_TAG"
+            COMMITS=$(git log "$PREV_TAG..HEAD" --pretty=format:"* %s (%h)" --no-merges)
+          else
+            echo "Premye tag detekte, n ap pran dènye commit yo:"
+            COMMITS=$(git log -n 35 --pretty=format:"* %s (%h)" --no-merges)
+          fi
+
+          if [ -z "$COMMITS" ]; then
+            COMMITS="* Mizajou jeneral ak amelyorasyon pèfòmans."
+          fi
+
+          TAG="${{ steps.versioning.outputs.tag }}"
+          RELEASE_DATE=$(date -u +"%d/%m/%Y")
+
+          # Bati kò Release la
+          BODY_CONTENT=$(cat <<EOF
+          # 🏛️ OmniChurch $TAG — Release Ofisyèl
+
+          Nouvo vèsyon pwodiksyon **OmniChurch $TAG** pare pou telechaje. Tout chanjman ak optimize yo enkli anba a.
+
+          ---
+
+          ## 📋 Lis Dènye Chanjman yo (Commit Changelogs) :
+          $COMMITS
+
+          ---
+
+          ## 📦 Fichye Enstalasyon ki Disponib (Assets) :
+          - **Android APK** : \`OmniChurch.apk\` (Telefòn & Tablèt Android 5.0+)
+          - **Windows PC** : \`OmniChurch-Setup.exe\` (Windows 11, 10, 8.1, 7)
+
+          ---
+
+          ## 🔒 Sekirite & Verifikasyon :
+          - Tout fichye yo teste pou zewo viris ak zewo malvè.
+          - Enstalasyon offline-first : done legliz la rete an sekirite lokalman sou aparèy ou.
+
+          *Pibliye otomatikman pa GitHub Actions nan dat : $RELEASE_DATE*
+          EOF
+          )
+
+          # Ekri nan GITHUB_OUTPUT avèk delimitè EOF
+          echo "body<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$BODY_CONTENT" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Verifye Fichye Binè (.apk ak .exe)
+        run: |
+          echo "Rechèch fichye .apk ak .exe nan repozitwa a..."
+          ls -la binaries/ 2>/dev/null || echo "Pa gen dosye binaries/"
+          ls -la *.apk *.exe 2>/dev/null || echo "Pa gen .apk/.exe nan rasin lan"
+
+      - name: Kreye GitHub Release & Atache Fichye yo
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.versioning.outputs.tag }}
+          name: ${{ steps.versioning.outputs.title }}
+          body: ${{ steps.changelog.outputs.body }}
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease || false }}
+          files: |
+            binaries/*.apk
+            binaries/*.exe
+            *.apk
+            *.exe
+            dist/*.apk
+            dist/*.exe
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
