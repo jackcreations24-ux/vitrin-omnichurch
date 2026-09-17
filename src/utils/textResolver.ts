@@ -50,33 +50,33 @@ export function resolveSiteTexts(
   );
 
   return {
-    heroEyebrow: langOverrides?.heroEyebrow || (isCustomEdited && lang === 'ht' ? current.heroEyebrow : t.hero.eyebrow),
-    heroEyebrowSub: langOverrides?.heroEyebrowSub || (isCustomEdited && lang === 'ht' ? current.heroEyebrowSub : t.hero.eyebrowSub),
+    heroEyebrow: langOverrides?.heroEyebrow || (lang === 'ht' && current.heroEyebrow ? current.heroEyebrow : t.hero.eyebrow),
+    heroEyebrowSub: langOverrides?.heroEyebrowSub || (lang === 'ht' && current.heroEyebrowSub ? current.heroEyebrowSub : t.hero.eyebrowSub),
     heroBadge: current.heroBadge || t.hero.badge,
-    heroTitlePrefix: langOverrides?.heroTitlePrefix || (isCustomEdited && lang === 'ht' ? current.heroTitlePrefix : t.hero.titlePrefix),
-    heroTitleHighlight: langOverrides?.heroTitleHighlight || (isCustomEdited ? current.heroTitleHighlight : t.hero.titleHighlight),
-    heroSubtitle: langOverrides?.heroSubtitle || (isCustomEdited && lang === 'ht' ? current.heroSubtitle : t.hero.subtitle),
-    heroDescription: langOverrides?.heroDescription || (isCustomEdited && lang === 'ht' ? current.heroDescription : t.hero.description),
+    heroTitlePrefix: langOverrides?.heroTitlePrefix || (lang === 'ht' && current.heroTitlePrefix ? current.heroTitlePrefix : t.hero.titlePrefix),
+    heroTitleHighlight: langOverrides?.heroTitleHighlight || current.heroTitleHighlight || t.hero.titleHighlight,
+    heroSubtitle: langOverrides?.heroSubtitle || (lang === 'ht' && current.heroSubtitle ? current.heroSubtitle : t.hero.subtitle),
+    heroDescription: langOverrides?.heroDescription || (lang === 'ht' && current.heroDescription ? current.heroDescription : t.hero.description),
 
-    featuresEyebrow: langOverrides?.featuresEyebrow || (isCustomEdited && lang === 'ht' ? current.featuresEyebrow : t.features.eyebrow),
-    featuresTitle: langOverrides?.featuresTitle || (isCustomEdited && lang === 'ht' ? current.featuresTitle : t.features.title),
-    featuresDescription: langOverrides?.featuresDescription || (isCustomEdited && lang === 'ht' ? current.featuresDescription : t.features.description),
+    featuresEyebrow: langOverrides?.featuresEyebrow || (lang === 'ht' && current.featuresEyebrow ? current.featuresEyebrow : t.features.eyebrow),
+    featuresTitle: langOverrides?.featuresTitle || (lang === 'ht' && current.featuresTitle ? current.featuresTitle : t.features.title),
+    featuresDescription: langOverrides?.featuresDescription || (lang === 'ht' && current.featuresDescription ? current.featuresDescription : t.features.description),
 
-    feature1Title: langOverrides?.feature1Title || (isCustomEdited && lang === 'ht' ? current.feature1Title : t.features.f1.title),
-    feature1Desc: langOverrides?.feature1Desc || (isCustomEdited && lang === 'ht' ? current.feature1Desc : t.features.f1.desc),
+    feature1Title: langOverrides?.feature1Title || (lang === 'ht' && current.feature1Title ? current.feature1Title : t.features.f1.title),
+    feature1Desc: langOverrides?.feature1Desc || (lang === 'ht' && current.feature1Desc ? current.feature1Desc : t.features.f1.desc),
 
-    feature2Title: langOverrides?.feature2Title || (isCustomEdited && lang === 'ht' ? current.feature2Title : t.features.f2.title),
-    feature2Desc: langOverrides?.feature2Desc || (isCustomEdited && lang === 'ht' ? current.feature2Desc : t.features.f2.desc),
+    feature2Title: langOverrides?.feature2Title || (lang === 'ht' && current.feature2Title ? current.feature2Title : t.features.f2.title),
+    feature2Desc: langOverrides?.feature2Desc || (lang === 'ht' && current.feature2Desc ? current.feature2Desc : t.features.f2.desc),
 
-    feature3Title: langOverrides?.feature3Title || (isCustomEdited && lang === 'ht' ? current.feature3Title : t.features.f3.title),
-    feature3Desc: langOverrides?.feature3Desc || (isCustomEdited && lang === 'ht' ? current.feature3Desc : t.features.f3.desc),
+    feature3Title: langOverrides?.feature3Title || (lang === 'ht' && current.feature3Title ? current.feature3Title : t.features.f3.title),
+    feature3Desc: langOverrides?.feature3Desc || (lang === 'ht' && current.feature3Desc ? current.feature3Desc : t.features.f3.desc),
 
-    feature4Title: langOverrides?.feature4Title || (isCustomEdited && lang === 'ht' ? current.feature4Title : t.features.f4.title),
-    feature4Desc: langOverrides?.feature4Desc || (isCustomEdited && lang === 'ht' ? current.feature4Desc : t.features.f4.desc),
+    feature4Title: langOverrides?.feature4Title || (lang === 'ht' && current.feature4Title ? current.feature4Title : t.features.f4.title),
+    feature4Desc: langOverrides?.feature4Desc || (lang === 'ht' && current.feature4Desc ? current.feature4Desc : t.features.f4.desc),
 
-    downloadTitle: langOverrides?.downloadTitle || (isCustomEdited && lang === 'ht' ? current.downloadTitle : t.download.title),
-    downloadSubtitle: langOverrides?.downloadSubtitle || (isCustomEdited && lang === 'ht' ? current.downloadSubtitle : t.download.subtitle),
+    downloadTitle: langOverrides?.downloadTitle || (lang === 'ht' && current.downloadTitle ? current.downloadTitle : t.download.title),
+    downloadSubtitle: langOverrides?.downloadSubtitle || (lang === 'ht' && current.downloadSubtitle ? current.downloadSubtitle : t.download.subtitle),
 
-    footerAbout: langOverrides?.footerAbout || (isCustomEdited && lang === 'ht' ? current.footerAbout : t.footer.about),
+    footerAbout: langOverrides?.footerAbout || (lang === 'ht' && current.footerAbout ? current.footerAbout : t.footer.about),
   };
 }
