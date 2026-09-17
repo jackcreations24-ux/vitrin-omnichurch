@@ -47,6 +47,15 @@ import {
   trackCloudDownload,
 } from './lib/firebase';
 import {
+  fetchServerConfig,
+  saveServerLinks,
+  saveServerTexts,
+  saveServerAdSense,
+  saveServerSEO,
+  trackServerVisit,
+  trackServerDownload,
+} from './services/apiConfig';
+import {
   recordRealVisit,
   recordRealDownload,
   recordSettingsEvent,
@@ -89,13 +98,49 @@ export default function App() {
   // Dynamic synchronized version across all supported languages
   const currentVersionBadge = formatLocalizedVersionBadge(siteTexts?.heroBadge, lang);
 
-  // Real-time synchronization with Firebase Cloud Database (Zero code edit needed!)
+  // Real-time synchronization with Persistent Server & Cloud Database
   useEffect(() => {
     // Initial dynamic SEO application
     applyDynamicSEO(seo);
 
+    // 1. Fetch persistent server-side configuration (available to 100% of visitors & devices)
+    fetchServerConfig().then((serverCfg) => {
+      if (serverCfg) {
+        if (serverCfg.links && (serverCfg.links.android || serverCfg.links.pc || serverCfg.links.pc32 || serverCfg.links.mac)) {
+          setLinks((prev) => ({ ...prev, ...serverCfg.links }));
+          saveLinksToStorage(serverCfg.links);
+        }
+        if (serverCfg.siteTexts) {
+          setSiteTexts((prev) => ({ ...prev, ...serverCfg.siteTexts }));
+          saveSiteTextsToStorage(serverCfg.siteTexts);
+        }
+        if (serverCfg.adsense) {
+          setAdSense((prev) => ({ ...prev, ...serverCfg.adsense }));
+          saveAdSenseToStorage(serverCfg.adsense);
+        }
+        if (serverCfg.seo) {
+          setSeo((prev) => ({ ...prev, ...serverCfg.seo }));
+          applyDynamicSEO(serverCfg.seo);
+          saveSEOToStorage(serverCfg.seo);
+        }
+        if (serverCfg.analytics) {
+          setAnalytics((prev) => ({
+            ...prev,
+            totalVisits: Math.max(prev.totalVisits, serverCfg.analytics?.totalVisits || 0),
+            downloadsCount: Math.max(prev.downloadsCount, serverCfg.analytics?.totalDownloads || 0),
+            mobileDownloads: Math.max(prev.mobileDownloads, serverCfg.analytics?.mobileDownloads || 0),
+            pcDownloads: Math.max(prev.pcDownloads, serverCfg.analytics?.pcDownloads || 0),
+          }));
+        }
+      }
+    });
+
+    trackServerVisit();
+
     const unsubDownloads = subscribeToCloudDownloads((cloudLinks) => {
-      setLinks(cloudLinks);
+      if (cloudLinks && (cloudLinks.android || cloudLinks.pc || cloudLinks.pc32 || cloudLinks.mac)) {
+        setLinks(cloudLinks);
+      }
     });
 
     const unsubTexts = subscribeToCloudSiteTexts((cloudTexts) => {
@@ -220,20 +265,22 @@ export default function App() {
     setAnalytics(toAnalyticsState(updatedReal));
   }, []);
 
-  // Save updated links to Cloud & local storage
+  // Save updated links to Server, Cloud & local storage
   const handleSaveLinks = async (updated: DownloadLinks) => {
     setLinks(updated);
     saveLinksToStorage(updated);
+    await saveServerLinks(updated);
     await saveCloudDownloads(updated);
 
-    const updatedReal = recordSettingsEvent('Mizajou lyen telechajman nan Nwaj Firebase');
+    const updatedReal = recordSettingsEvent('Mizajou lyen telechajman pèmanan sou Sèvè & Nwaj');
     setAnalytics(toAnalyticsState(updatedReal));
   };
 
-  // Save updated Google AdSense configuration to Cloud & local storage
+  // Save updated Google AdSense configuration to Server, Cloud & local storage
   const handleSaveAdSense = async (updated: AdSenseConfig) => {
     setAdSense(updated);
     saveAdSenseToStorage(updated);
+    await saveServerAdSense(updated);
     await saveCloudAdSense(updated);
 
     const label = updated.enabled
@@ -243,21 +290,23 @@ export default function App() {
     setAnalytics(toAnalyticsState(updatedReal));
   };
 
-  // Save updated dynamic site texts to Cloud & local storage
+  // Save updated dynamic site texts to Server, Cloud & local storage
   const handleSaveSiteTexts = async (updated: SiteTextsConfig) => {
     setSiteTexts(updated);
     saveSiteTextsToStorage(updated);
+    await saveServerTexts(updated);
     await saveCloudSiteTexts(updated);
 
     const updatedReal = recordSettingsEvent('Mizajou deskripsyon & tèks sit la nan Nwaj');
     setAnalytics(toAnalyticsState(updatedReal));
   };
 
-  // Save updated SEO configuration to Cloud & local storage & update live DOM
+  // Save updated SEO configuration to Server, Cloud & local storage & update live DOM
   const handleSaveSEO = async (updated: SEOConfig) => {
     setSeo(updated);
     saveSEOToStorage(updated);
     applyDynamicSEO(updated);
+    await saveServerSEO(updated);
     await saveCloudSEO(updated);
 
     const updatedReal = recordSettingsEvent('Mizajou paramèt SEO & Sitemap nan Nwaj');
@@ -269,6 +318,7 @@ export default function App() {
     const updatedReal = recordRealDownload(platform, name);
     setAnalytics(toAnalyticsState(updatedReal));
     trackCloudDownload(platform);
+    trackServerDownload(platform);
     setDownloadToast({ open: true, platform, name });
   }, []);
 

@@ -113,6 +113,23 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
   const [textSaveSuccess, setTextSaveSuccess] = useState(false);
   const [seoSaveSuccess, setSeoSaveSuccess] = useState(false);
 
+  // Synchronize form values whenever props update
+  useEffect(() => {
+    if (links) setFormLinks(links);
+  }, [links]);
+
+  useEffect(() => {
+    if (adsense) setFormAdSense(adsense);
+  }, [adsense]);
+
+  useEffect(() => {
+    if (siteTexts) setFormTexts(siteTexts);
+  }, [siteTexts]);
+
+  useEffect(() => {
+    if (seo) setFormSEO(seo);
+  }, [seo]);
+
   // Ultra-secure 2-hour auto-lock / auto-close inactivity timer (7200 seconds)
   const INACTIVITY_TIMEOUT_SECONDS = 2 * 60 * 60; // 2 èdtan (7200 segond)
   const INACTIVITY_TIMEOUT_MS = INACTIVITY_TIMEOUT_SECONDS * 1000;
@@ -314,9 +331,17 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
   };
 
   const handleResetLinks = () => {
-    setFormLinks(DEFAULT_LINKS);
-    onSaveLinks(DEFAULT_LINKS);
-    saveLinksToStorage(DEFAULT_LINKS);
+    const emptyLinks: DownloadLinks = {
+      android: '',
+      ios: '',
+      pc: '',
+      pc32: '',
+      mac: '',
+      web: '',
+    };
+    setFormLinks(emptyLinks);
+    onSaveLinks(emptyLinks);
+    saveLinksToStorage(emptyLinks);
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 3000);
   };
@@ -900,7 +925,7 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                         type="text"
                         value={formLinks.android}
                         onChange={(e) => setFormLinks({ ...formLinks, android: e.target.value })}
-                        placeholder="https://.../OmniChurch-v2.4.apk oswa lyen Mediafire"
+                        placeholder="Kole lyen APK ofisyèl la (egz: https://github.com/.../OmniChurch.apk)"
                         className="w-full bg-[#020712] border border-[#1b4882] rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-[#35c9ff] transition"
                       />
                       {formLinks.android && (
@@ -932,7 +957,7 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                         type="text"
                         value={formLinks.pc}
                         onChange={(e) => setFormLinks({ ...formLinks, pc: e.target.value })}
-                        placeholder="https://.../OmniChurch-Setup-x64.exe"
+                        placeholder="Kole lyen Windows 64-bit ofisyèl la (egz: https://github.com/.../OmniChurch-Setup-x64.exe)"
                         className="w-full bg-[#020712] border border-[#1b4882] rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-[#35c9ff] transition"
                       />
                       {formLinks.pc && (
@@ -964,7 +989,7 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                         type="text"
                         value={formLinks.pc32 || ''}
                         onChange={(e) => setFormLinks({ ...formLinks, pc32: e.target.value })}
-                        placeholder="https://.../OmniChurch-Setup-x86.exe"
+                        placeholder="Kole lyen Windows 32-bit (.exe) si w genyen l"
                         className="w-full bg-[#020712] border border-[#1b4882] rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-[#35c9ff] transition"
                       />
                       {formLinks.pc32 && (
@@ -996,7 +1021,7 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                         type="text"
                         value={formLinks.mac || ''}
                         onChange={(e) => setFormLinks({ ...formLinks, mac: e.target.value })}
-                        placeholder="https://.../OmniChurch-Universal.dmg"
+                        placeholder="Kole lyen Mac (.dmg) si w genyen l"
                         className="w-full bg-[#020712] border border-[#1b4882] rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-[#35c9ff] transition"
                       />
                       {formLinks.mac && (
@@ -1023,7 +1048,7 @@ export const DevDashboardModal: React.FC<DevDashboardModalProps> = ({
                     className="px-4 py-2.5 rounded-xl bg-[#091e3e] border border-[#1e4d8c] text-xs font-bold text-[#8ca8cc] hover:text-white transition flex items-center gap-1.5 cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Retabli Lyen Defo Yo</span>
+                    <span>Vide / Retire Tout Lyen</span>
                   </button>
 
                   <button

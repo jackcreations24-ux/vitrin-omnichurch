@@ -158,18 +158,19 @@ export function subscribeToCloudDownloads(
     (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data() as Partial<DownloadLinks>;
-        const merged: DownloadLinks = { ...DEFAULT_LINKS, ...data };
+        const cleaned: Partial<DownloadLinks> = {};
+        for (const [key, val] of Object.entries(data)) {
+          if (typeof val === 'string' && !val.includes('jacksoncharles/omnichurch/releases/download/v2.4.0')) {
+            cleaned[key as keyof DownloadLinks] = val;
+          }
+        }
+        const merged: DownloadLinks = { ...DEFAULT_LINKS, ...cleaned };
         try {
           localStorage.setItem(STORAGE_KEYS.LINKS, JSON.stringify(merged));
         } catch {
           // ignore
         }
         onUpdate(merged);
-      } else {
-        setDoc(docRef, DEFAULT_LINKS, { merge: true }).catch((err) => {
-          console.warn('Erè senkronizasyon lyen defo nan nwaj la:', err?.message || err);
-        });
-        onUpdate(DEFAULT_LINKS);
       }
     },
     (error) => {

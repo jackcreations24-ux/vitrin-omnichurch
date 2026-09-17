@@ -1,0 +1,20 @@
+{
+  "links": {
+    "android": "",
+    "ios": "",
+    "pc": "",
+    "pc32": "",
+    "mac": "",
+    "web": ""
+  },
+  "siteTexts": null,
+  "adsense": null,
+  "seo": null,
+  "analytics": {
+    "totalVisits": 0,
+    "totalDownloads": 0,
+    "mobileDownloads": 0,
+    "pcDownloads": 0
+  },
+  "updatedAt": "2026-09-17T06:00:00.000Z"
+}

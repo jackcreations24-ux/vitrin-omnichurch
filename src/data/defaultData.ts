@@ -86,12 +86,12 @@ export const DEFAULT_ADSENSE: AdSenseConfig = {
 };
 
 export const DEFAULT_LINKS: DownloadLinks = {
-  android: 'https://github.com/jacksoncharles/omnichurch/releases/download/v2.4.0/OmniChurch-v2.4.apk',
-  ios: 'https://apps.apple.com/app/omnichurch/id1689234567',
-  pc: 'https://github.com/jacksoncharles/omnichurch/releases/download/v2.4.0/OmniChurch-Setup-x64.exe',
-  pc32: 'https://github.com/jacksoncharles/omnichurch/releases/download/v2.4.0/OmniChurch-Setup-x86.exe',
-  mac: 'https://github.com/jacksoncharles/omnichurch/releases/download/v2.4.0/OmniChurch-Mac-Universal.dmg',
-  web: 'https://app.omnichurch.org',
+  android: '',
+  ios: '',
+  pc: '',
+  pc32: '',
+  mac: '',
+  web: '',
 };
 
 export const INITIAL_HOURLY_TRAFFIC: TrafficPoint[] = [
@@ -182,7 +182,14 @@ export function loadSavedLinks(): DownloadLinks {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.LINKS);
     if (raw) {
-      return { ...DEFAULT_LINKS, ...JSON.parse(raw) };
+      const parsed = JSON.parse(raw);
+      const cleaned: Partial<DownloadLinks> = {};
+      for (const [key, val] of Object.entries(parsed)) {
+        if (typeof val === 'string' && !val.includes('jacksoncharles/omnichurch/releases/download/v2.4.0')) {
+          cleaned[key as keyof DownloadLinks] = val;
+        }
+      }
+      return { ...DEFAULT_LINKS, ...cleaned };
     }
   } catch {
     // fallback
