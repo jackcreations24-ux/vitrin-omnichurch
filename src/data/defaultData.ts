@@ -119,95 +119,51 @@ export const STORAGE_KEYS = {
   DEV_UNLOCKED: 'oc_dev_unlocked',
 };
 
-export function loadSavedSEO(): SEOConfig {
+// Purge any legacy localStorage cache keys so nothing is overridden by stale client data
+if (typeof window !== 'undefined') {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.SEO);
-    if (raw) {
-      return { ...DEFAULT_SEO, ...JSON.parse(raw) };
-    }
+    localStorage.removeItem(STORAGE_KEYS.LINKS);
+    localStorage.removeItem(STORAGE_KEYS.SITE_TEXTS);
+    localStorage.removeItem(STORAGE_KEYS.ADSENSE);
+    localStorage.removeItem(STORAGE_KEYS.SEO);
+    localStorage.removeItem('oc_download_links');
+    localStorage.removeItem('oc_download_links_v1');
+    localStorage.removeItem('oc_download_links_v2');
   } catch {
-    // fallback
+    // ignore
   }
+}
+
+export function loadSavedSEO(): SEOConfig {
   return DEFAULT_SEO;
 }
 
-export function saveSEOToStorage(config: SEOConfig) {
-  try {
-    localStorage.setItem(STORAGE_KEYS.SEO, JSON.stringify(config));
-  } catch (e) {
-    console.error('Error saving SEO config:', e);
-  }
+export function saveSEOToStorage(_config: SEOConfig) {
+  // Direkteman nan memwa ak sou sèvè a - pa gen localStorage
 }
 
 export function loadSavedSiteTexts(): SiteTextsConfig {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.SITE_TEXTS);
-    if (raw) {
-      return { ...DEFAULT_SITE_TEXTS, ...JSON.parse(raw) };
-    }
-  } catch {
-    // fallback
-  }
   return DEFAULT_SITE_TEXTS;
 }
 
-export function saveSiteTextsToStorage(texts: SiteTextsConfig) {
-  try {
-    localStorage.setItem(STORAGE_KEYS.SITE_TEXTS, JSON.stringify(texts));
-  } catch (e) {
-    console.error('Error saving site texts:', e);
-  }
+export function saveSiteTextsToStorage(_texts: SiteTextsConfig) {
+  // Direkteman nan memwa ak sou sèvè a - pa gen localStorage
 }
 
 export function loadSavedAdSense(): AdSenseConfig {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.ADSENSE);
-    if (raw) {
-      return { ...DEFAULT_ADSENSE, ...JSON.parse(raw) };
-    }
-  } catch {
-    // fallback
-  }
   return DEFAULT_ADSENSE;
 }
 
-export function saveAdSenseToStorage(config: AdSenseConfig) {
-  try {
-    localStorage.setItem(STORAGE_KEYS.ADSENSE, JSON.stringify(config));
-  } catch (e) {
-    console.error('Error saving AdSense config:', e);
-  }
+export function saveAdSenseToStorage(_config: AdSenseConfig) {
+  // Direkteman nan memwa ak sou sèvè a - pa gen localStorage
 }
 
 export function loadSavedLinks(): DownloadLinks {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.LINKS);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      const cleaned: Partial<DownloadLinks> = {};
-      for (const [key, val] of Object.entries(parsed)) {
-        if (
-          typeof val === 'string' &&
-          val.trim() !== '' &&
-          !val.includes('jacksoncharles/omnichurch/releases/download/v2.4.0')
-        ) {
-          cleaned[key as keyof DownloadLinks] = val.trim();
-        }
-      }
-      return { ...DEFAULT_LINKS, ...cleaned };
-    }
-  } catch {
-    // fallback
-  }
   return DEFAULT_LINKS;
 }
 
-export function saveLinksToStorage(links: DownloadLinks) {
-  try {
-    localStorage.setItem(STORAGE_KEYS.LINKS, JSON.stringify(links));
-  } catch (e) {
-    console.error('Error saving links:', e);
-  }
+export function saveLinksToStorage(_links: DownloadLinks) {
+  // Direkteman nan memwa ak sou sèvè a - pa gen localStorage
 }
 
 export function loadAnalytics(): AnalyticsState {
@@ -215,10 +171,6 @@ export function loadAnalytics(): AnalyticsState {
   return toAnalyticsState(real);
 }
 
-export function persistAnalytics(state: AnalyticsState) {
-  try {
-    localStorage.setItem(STORAGE_KEYS.ANALYTICS, JSON.stringify(state));
-  } catch (e) {
-    console.error('Error persisting analytics:', e);
-  }
+export function persistAnalytics(_state: AnalyticsState) {
+  // Direkteman nan memwa ak sou sèvè a - pa gen localStorage
 }

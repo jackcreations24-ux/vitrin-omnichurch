@@ -29,6 +29,7 @@ interface DownloadSectionProps {
   siteTexts?: SiteTextsConfig;
   detectedArch?: '64' | '32';
   onOpenPcGuide?: () => void;
+  onOpenIosGuide?: () => void;
   onTrackDownload: (platform: 'mobile' | 'pc', name: string) => void;
 }
 
@@ -37,6 +38,7 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({
   siteTexts,
   detectedArch: propDetectedArch,
   onOpenPcGuide,
+  onOpenIosGuide,
   onTrackDownload,
 }) => {
   const { t, lang } = useI18n();
@@ -351,48 +353,63 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({
             </div>
           </div>
 
-          {/* Card 3: Apple iOS (iPhone & iPad) -> COMING SOON */}
-          <div className="glass p-6 rounded-[22px] border-amber-500/30 hover:border-amber-400/60 transition-all duration-300 flex flex-col justify-between group shadow-[0_10px_30px_rgba(3,10,25,0.6)] relative opacity-95">
+          {/* Card 3: Apple iOS (iPhone & iPad) PWA */}
+          <div className="glass p-6 rounded-[22px] border-cyan-400/40 hover:border-cyan-400/70 transition-all duration-300 flex flex-col justify-between group shadow-[0_10px_30px_rgba(3,10,25,0.6)] relative">
             <div>
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-600/30 border border-amber-400/30 flex items-center justify-center text-amber-400 group-hover:scale-105 transition-transform shadow-lg">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400/20 to-blue-600/30 border border-cyan-400/40 flex items-center justify-center text-cyan-300 group-hover:scale-105 transition-transform shadow-lg">
                   <Apple className="w-6 h-6" />
                 </div>
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-950/90 border border-amber-500/40 text-amber-300 flex items-center gap-1.5 shadow-sm">
-                  <Clock className="w-3 h-3 text-amber-400 animate-spin" />
-                  COMING SOON
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-blue-950/80 border border-cyan-400/40 text-cyan-300 flex items-center gap-1">
+                  <Smartphone className="w-3 h-3" />
+                  PWA INSTANT
                 </span>
               </div>
 
-              <div className="text-[10px] font-extrabold text-amber-400 tracking-wider uppercase">APPLE iOS</div>
+              <div className="text-[10px] font-extrabold text-[#35c9ff] tracking-wider uppercase">APPLE iOS PWA</div>
               <h3 className="text-xl font-extrabold text-white mt-1 mb-2">iPhone &amp; iPad</h3>
-              <p className="text-xs text-blue-200/65 leading-relaxed mb-4">
-                Vèsyon natif pou aparèy Apple ap finalize kounye a pou distribisyon ofisyèl sou Apple App Store.
+              <p className="text-xs text-blue-200/65 leading-relaxed mb-3">
+                Vèsyon PWA ofisyèl pou iOS. Enstale dirèkteman nan Safari sou ekran akèy iPhone ou an tèt lòt aplikasyon yo.
               </p>
 
               <div className="space-y-2 text-xs text-blue-100/80 mb-6 bg-white/5 p-3 rounded-xl border border-white/5">
-                <div className="flex items-center gap-2 text-amber-200/80">
-                  <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  <span className="font-semibold">Estati: Ap Vini Talè</span>
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
+                  <span>Lyen ofisyèl: ios.omnichurch.download</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                  <span>Konpatib iOS 16.0 oswa pi resan</span>
+                  <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
+                  <span>Enstalasyon rapid via Safari (Share → Add)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                  <span>Entegrasyon Apple Push &amp; iCloud</span>
+                  <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
+                  <span>100% Konpatib iOS 15+ ak iPadOS</span>
                 </div>
               </div>
             </div>
 
-            <button
-              onClick={() => showComingSoonAlert('Apple iOS (iPhone / iPad)')}
-              className="w-full py-3.5 px-4 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-200 font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all"
-            >
-              <Clock className="w-4 h-4 text-amber-400" />
-              <span>Ap Vini Talè sou App Store</span>
-            </button>
+            <div className="space-y-2">
+              <button
+                onClick={() => {
+                  onTrackDownload('mobile', 'iOS PWA (ios.omnichurch.download)');
+                  window.open('https://ios.omnichurch.download/', '_blank', 'noopener,noreferrer');
+                }}
+                className="btn-gradient w-full py-3 px-4 rounded-xl text-white font-black text-xs flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:scale-[1.02] transition-transform"
+              >
+                <Download className="w-4 h-4" />
+                <span>Enstale sou iOS (iPhone)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onOpenIosGuide?.()}
+                className="w-full py-2 px-3 rounded-xl bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-400/30 hover:border-cyan-400/60 text-cyan-300 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer group"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
+                <span>Gid Enstalasyon PWA iOS (Screenshots)</span>
+                <ChevronRight className="w-3 h-3 text-cyan-400/60 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
           </div>
 
           {/* Card 4: Apple Mac macOS -> COMING SOON */}

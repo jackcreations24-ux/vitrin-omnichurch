@@ -16,6 +16,7 @@ import { ContactSection } from './components/ContactSection';
 import { DevDashboardModal } from './components/DevDashboardModal';
 import { DownloadModal } from './components/DownloadModal';
 import { PcInstallGuideModal } from './components/PcInstallGuideModal';
+import { IosInstallGuideModal } from './components/IosInstallGuideModal';
 import { SitemapModal } from './components/SitemapModal';
 import { PoliciesModal, PolicyTab } from './components/PoliciesModal';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
@@ -80,6 +81,7 @@ export default function App() {
   const [seo, setSeo] = useState<SEOConfig>(() => loadSavedSEO());
   const [detectedArch, setDetectedArch] = useState<'64' | '32'>(() => detectArchitecture());
   const [pcGuideModalOpen, setPcGuideModalOpen] = useState(false);
+  const [iosGuideModalOpen, setIosGuideModalOpen] = useState(false);
   const [devModalOpen, setDevModalOpen] = useState(false);
   const [sitemapModalOpen, setSitemapModalOpen] = useState(false);
   const [policiesModalOpen, setPoliciesModalOpen] = useState(false);
@@ -459,6 +461,7 @@ export default function App() {
           siteTexts={siteTexts}
           detectedArch={detectedArch}
           onOpenPcGuide={() => setPcGuideModalOpen(true)}
+          onOpenIosGuide={() => setIosGuideModalOpen(true)}
           onTrackDownload={handleTrackDownload}
         />
 
@@ -512,6 +515,12 @@ export default function App() {
         detectedArch={detectedArch}
         links={links}
         onDownload={handleTrackDownload}
+      />
+
+      {/* Ultra Pro iOS PWA Installation Guide Modal with simulated screenshots */}
+      <IosInstallGuideModal
+        isOpen={iosGuideModalOpen}
+        onClose={() => setIosGuideModalOpen(false)}
       />
 
       {/* Dynamic SEO & Sitemap Modal */}
