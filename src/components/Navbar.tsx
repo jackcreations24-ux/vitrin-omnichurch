@@ -13,6 +13,7 @@ import {
   Mail,
   Scale,
   Heart,
+  Check,
 } from 'lucide-react';
 import { SecureLivePill } from './SecureLivePill';
 import { useI18n } from '../i18n/I18nContext';
@@ -43,24 +44,31 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const langMenuRef = useRef<HTMLDivElement>(null);
   const { lang, setLang, t } = useI18n();
 
-  // Close desktop dropdown menu when clicking outside or pressing Escape
+  // Close desktop dropdown menus when clicking outside or pressing Escape
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (menuRef.current && !menuRef.current.contains(target)) {
         setDesktopMenuOpen(false);
+      }
+      if (langMenuRef.current && !langMenuRef.current.contains(target)) {
+        setLangMenuOpen(false);
       }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setDesktopMenuOpen(false);
+        setLangMenuOpen(false);
       }
     };
 
-    if (desktopMenuOpen) {
+    if (desktopMenuOpen || langMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('keydown', handleKeyDown);
     }
@@ -69,7 +77,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [desktopMenuOpen]);
+  }, [desktopMenuOpen, langMenuOpen]);
 
   const languages: Array<{ code: SupportedLang; label: string; name: string; flag: string }> = [
     { code: 'ht', label: 'HT', name: 'Kreyòl Ayisyen', flag: '🇭🇹' },
@@ -259,27 +267,70 @@ export const Navbar: React.FC<NavbarProps> = ({
               {versionBadge || t.nav.stableBadge}
             </span>
 
-            {/* Interactive Language Selector (Desktop) - Official names in their own languages with distinct selected style */}
-            <div className="flex items-center gap-1 bg-black/60 px-2 py-1.5 rounded-xl border border-white/15 text-[11px] font-bold shadow-inner">
-              <Globe className="w-3.5 h-3.5 text-[#35c9ff] mr-1 flex-shrink-0" />
-              {languages.map((l, index) => (
-                <React.Fragment key={l.code}>
+            {/* Interactive Language Dropdown Menu (Desktop) */}
+            <div className="relative" ref={langMenuRef}>
+              {(() => {
+                const currentLanguage = languages.find((l) => l.code === lang) || languages[0];
+                return (
                   <button
                     type="button"
-                    onClick={() => setLang(l.code)}
-                    className={`px-2 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                      lang === l.code
-                        ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-[0_0_15px_rgba(8,124,255,0.7)] scale-105 border border-white/30 font-extrabold'
-                        : 'text-blue-200/70 hover:text-white hover:bg-white/10'
+                    onClick={() => setLangMenuOpen((prev) => !prev)}
+                    aria-expanded={langMenuOpen}
+                    aria-haspopup="listbox"
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border shadow-inner ${
+                      langMenuOpen
+                        ? 'bg-[#087cff]/25 text-white border-[#35c9ff]/60 shadow-[0_0_16px_rgba(8,124,255,0.45)]'
+                        : 'bg-black/60 hover:bg-white/10 text-white border-white/15 hover:border-[#35c9ff]/40'
                     }`}
-                    title={l.name}
+                    title={currentLanguage.name}
                   >
-                    <span>{l.flag}</span>
-                    <span className="whitespace-nowrap">{l.name}</span>
+                    <Globe className="w-3.5 h-3.5 text-[#35c9ff] shrink-0" />
+                    <span>{currentLanguage.flag}</span>
+                    <span className="whitespace-nowrap font-extrabold text-[#35c9ff]">
+                      {currentLanguage.name}
+                    </span>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-blue-300/80 transition-transform duration-200 ${
+                        langMenuOpen ? 'rotate-180 text-[#35c9ff]' : ''
+                      }`}
+                    />
                   </button>
-                  {index < languages.length - 1 && <span className="text-white/20 select-none">|</span>}
-                </React.Fragment>
-              ))}
+                );
+              })()}
+
+              {langMenuOpen && (
+                <div
+                  role="listbox"
+                  className="absolute right-0 top-full mt-2.5 w-52 p-1.5 rounded-2xl bg-[#020712]/95 backdrop-blur-2xl border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.85)] z-50 space-y-1"
+                >
+                  {languages.map((l) => {
+                    const isActive = lang === l.code;
+                    return (
+                      <button
+                        key={l.code}
+                        type="button"
+                        role="option"
+                        aria-selected={isActive}
+                        onClick={() => {
+                          setLang(l.code);
+                          setLangMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+                          isActive
+                            ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-[0_0_15px_rgba(8,124,255,0.5)] font-extrabold border border-white/25'
+                            : 'text-blue-100/80 hover:text-white hover:bg-white/10 font-semibold'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2.5">
+                          <span className="text-sm">{l.flag}</span>
+                          <span className="whitespace-nowrap">{l.name}</span>
+                        </span>
+                        {isActive && <Check className="w-3.5 h-3.5 text-white shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Live Indicator Pill - Only authentic point of access via 10-second continuous hold */}
