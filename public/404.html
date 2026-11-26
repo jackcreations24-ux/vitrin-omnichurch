@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="ht">
+  <head>
+    <meta charset="UTF-8" />
+    <title>OmniChurch Portal</title>
+    <script>
+      (function () {
+        var path = window.location.pathname || '/';
+        var search = window.location.search || '';
+        var hash = window.location.hash || '';
+        var target = '/?p=' + encodeURIComponent(path + search + hash);
+        window.location.replace(target);
+      })();
+    </script>
+  </head>
+  <body style="background:#020711;color:#f6fbff;font-family:sans-serif;text-align:center;padding:48px;">
+    <p>Redireksyon an kous...</p>
+  </body>
+</html>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Gradye ble modèn minimalist -->
+    <linearGradient id="ocBlueCircle" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0ea5e9" />
+      <stop offset="50%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#0369a1" />
+    </linearGradient>
+    <!-- Lonbraj mou modèn -->
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#0284c7" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- Sèk Ble Modèn -->
+  <circle cx="256" cy="256" r="236" fill="url(#ocBlueCircle)" filter="url(#softGlow)" />
+  
+  <!-- Liy kontou enteryè minimalist -->
+  <circle cx="256" cy="256" r="234" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.25" />
+
+  <!-- Monogram 'OC' minimalist, fonse epi klè -->
+  <g fill="none" stroke="#ffffff" stroke-width="36" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Lèt 'O' jewometrik -->
+    <circle cx="171" cy="256" r="68" />
+
+    <!-- Lèt 'C' jewometrik louvri -->
+    <path d="M 409 210 A 68 68 0 1 0 409 302" />
+  </g>
+</svg>

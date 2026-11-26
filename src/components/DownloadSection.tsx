@@ -1,0 +1,640 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Smartphone,
+  Apple,
+  Monitor,
+  Download,
+  Check,
+  Clock,
+  Cpu,
+  Bell,
+  CheckCircle2,
+  HelpCircle,
+  ChevronRight,
+  ShieldCheck,
+  Share2,
+  MessageCircle,
+  Copy,
+  Sparkles,
+  AlertTriangle,
+} from 'lucide-react';
+import {
+  DeveloperEngineAppUpdate,
+  DownloadLinks,
+  EngineLang,
+  SiteTextsConfig,
+} from '../types';
+import { detectDevice, detectArchitecture, DeviceDetectionResult } from '../utils/deviceDetect';
+import { PcInstallGuideModal } from './PcInstallGuideModal';
+import { useI18n } from '../i18n/I18nContext';
+import { formatLocalizedVersionBadge } from '../utils/versionHelper';
+import { resolveSiteTexts } from '../utils/textResolver';
+
+interface DownloadSectionProps {
+  links: DownloadLinks;
+  siteTexts?: SiteTextsConfig;
+  appUpdate?: DeveloperEngineAppUpdate;
+  detectedArch?: '64' | '32';
+  onOpenPcGuide?: () => void;
+  onOpenIosGuide?: () => void;
+  onTrackDownload: (platform: 'mobile' | 'pc', name: string) => void;
+}
+
+export const DownloadSection: React.FC<DownloadSectionProps> = ({
+  links,
+  siteTexts,
+  appUpdate,
+  detectedArch: propDetectedArch,
+  onOpenPcGuide,
+  onOpenIosGuide,
+  onTrackDownload,
+}) => {
+  const { t, lang } = useI18n();
+  const activeLang: EngineLang = (['ht', 'fr', 'en', 'es'].includes(lang) ? lang : 'ht') as EngineLang;
+  const resolved = resolveSiteTexts(siteTexts, t, lang);
+  const effectiveBadgeRaw = appUpdate?.enabled && appUpdate.latestVersion
+    ? `v${appUpdate.latestVersion.replace(/^v/i, '')} ${appUpdate.channel === 'beta' ? 'Beta' : appUpdate.channel === 'urgent' ? 'Urgent' : 'Stable'}`
+    : resolved.heroBadge;
+  const currentVersionBadge = formatLocalizedVersionBadge(effectiveBadgeRaw, lang);
+  const texts = {
+    downloadTitle: resolved.downloadTitle,
+    downloadSubtitle: resolved.downloadSubtitle,
+  };
+  const [deviceInfo, setDeviceInfo] = useState<DeviceDetectionResult>(() => detectDevice());
+  const [activeDetectedArch, setActiveDetectedArch] = useState<'64' | '32'>(() => {
+    if (propDetectedArch) return propDetectedArch;
+    return detectArchitecture();
+  });
+  const [selectedArch, setSelectedArch] = useState<'64' | '32'>('64');
+  const [notifiedEmail, setNotifiedEmail] = useState('');
+  const [isNotified, setIsNotified] = useState(false);
+  const [comingSoonToast, setComingSoonToast] = useState<string | null>(null);
+  const [localGuideOpen, setLocalGuideOpen] = useState(false);
+  const [copiedShareLink, setCopiedShareLink] = useState(false);
+
+  // Generate share URL and localized text for Facebook & WhatsApp
+  const shareUrl = typeof window !== 'undefined' && window.location.href ? window.location.href : 'https://omnichurch.download';
+  const shareText =
+    lang === 'ht'
+      ? 'Telechaje OmniChurch: Platfòm jesyon legliz pwofesyonèl ak Kat Manm Dijital QR gratis pou PC ak Mobil!'
+      : lang === 'fr'
+      ? 'Téléchargez OmniChurch : Plateforme de gestion d’église professionnelle et Cartes de Membres Numériques QR gratuites pour PC et Mobile !'
+      : lang === 'es'
+      ? '¡Descarga OmniChurch: Plataforma profesional de gestión eclesiástica y Credenciales Digitales QR gratis para PC y Móvil!'
+      : 'Download OmniChurch: Professional church management platform with QR Digital Membership Cards free for PC & Mobile!';
+
+  const handleShareWhatsApp = () => {
+    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`;
+    window.open(waUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleShareFacebook = () => {
+    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
+    window.open(fbUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleCopyShareLink = async () => {
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const input = document.createElement('input');
+        input.value = shareUrl;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+      }
+      setCopiedShareLink(true);
+      setTimeout(() => setCopiedShareLink(false), 2500);
+    } catch {
+      setCopiedShareLink(true);
+      setTimeout(() => setCopiedShareLink(false), 2500);
+    }
+  };
+
+  // Detect and synchronize architecture via navigator.platform or navigator.userAgent
+  useEffect(() => {
+    const info = detectDevice();
+    setDeviceInfo(info);
+    const arch = propDetectedArch || detectArchitecture();
+    setActiveDetectedArch(arch);
+    setSelectedArch(arch);
+  }, [propDetectedArch]);
+
+  const handleDownloadClick = (platform: 'mobile' | 'pc', name: string, url?: string) => {
+    onTrackDownload(platform, name);
+    const targetUrl = url && url !== '#' ? url : 'https://github.com/jackcreations24-ux/vitrin-omnichurch/releases/latest';
+    try {
+      const a = document.createElement('a');
+      a.href = targetUrl;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch {
+      window.location.href = targetUrl;
+    }
+  };
+
+  const showComingSoonAlert = (platform: string) => {
+    setComingSoonToast(`Vèsyon ${platform} lan ${t.download.alertComingSoon}`);
+    setTimeout(() => {
+      setComingSoonToast(null);
+    }, 6000);
+  };
+
+  const handleNotifySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (notifiedEmail) {
+      setIsNotified(true);
+      setTimeout(() => {
+        setIsNotified(false);
+        setNotifiedEmail('');
+      }, 5000);
+    }
+  };
+
+  const handleOpenGuide = () => {
+    if (onOpenPcGuide) {
+      onOpenPcGuide();
+    } else {
+      setLocalGuideOpen(true);
+    }
+  };
+
+  const winActiveUrl = selectedArch === '64' ? links.pc : (links.pc32 || links.pc);
+
+  // Dynamically calculate download button label based on detected architecture
+  const isSelectedArchDetected = selectedArch === activeDetectedArch;
+  const isUserOnWindows = deviceInfo.isWindows;
+
+  let dynamicButtonLabel = `Telechaje Windows (${selectedArch}-bit)`;
+  if (isUserOnWindows && isSelectedArchDetected) {
+    dynamicButtonLabel = `Telechaje Windows (${selectedArch}-bit) • Rekòmande pou PC Ou`;
+  } else if (selectedArch === '32') {
+    dynamicButtonLabel = `Telechaje Windows 32-bit (x86) • Mòd Konpatibilite`;
+  } else {
+    dynamicButtonLabel = `Telechaje Windows 64-bit (x64) Pro`;
+  }
+
+  return (
+    <section id="download" className="py-14 md:py-24 relative z-10 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14 space-y-3">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-950/60 border border-cyan-400/30 text-[#35c9ff] text-xs font-black tracking-widest uppercase">
+            <span>Telechajman Santralize</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+            {texts.downloadTitle}
+          </h2>
+          <p className="text-sm sm:text-base text-blue-100/70 leading-relaxed max-w-2xl mx-auto">
+            {texts.downloadSubtitle}
+          </p>
+
+          {/* Intelligent Device Banner */}
+          <div className="inline-flex flex-wrap items-center justify-center gap-2 pt-2 px-3.5 py-2 rounded-2xl bg-blue-950/70 border border-cyan-400/20 text-xs text-blue-200">
+            <Cpu className="w-4 h-4 text-[#35c9ff]" />
+            <span>{t.download.deviceDetected}</span>
+            <span className="font-extrabold text-white px-2 py-0.5 rounded bg-blue-900/60 border border-blue-400/30">
+              {deviceInfo.isWindows ? `Windows PC (${deviceInfo.bitness}-bit)` : deviceInfo.osName}
+            </span>
+            <span className="text-green-400 font-bold text-[11px]">{t.download.recommendReady}</span>
+          </div>
+        </div>
+
+        {/* Coming Soon notification toast */}
+        {comingSoonToast && (
+          <div className="max-w-xl mx-auto mb-8 p-4 rounded-2xl bg-amber-950/90 border border-amber-500/50 text-amber-200 text-xs flex items-start gap-3 shadow-2xl animate-fadeIn">
+            <Clock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold text-amber-300 block text-sm">Ap Vini Talè (Coming Soon)</span>
+              <p className="mt-1 leading-relaxed">{comingSoonToast}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Live Cloud Release Notes & Highlights Card (Synced from Developer Engine) */}
+        {appUpdate?.enabled && (
+          <div className="mb-8 p-5 sm:p-6 rounded-[22px] glass border border-[#35c9ff]/30 bg-gradient-to-r from-[#04142b]/85 via-[#071c3d]/80 to-[#031024]/90 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-[#087cff]/20 border border-[#35c9ff]/40 flex items-center justify-center text-[#35c9ff]">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-sm sm:text-base font-extrabold text-white">
+                      {activeLang === 'ht'
+                        ? `Nouvèl Vèsyon v${appUpdate.latestVersion}`
+                        : activeLang === 'fr'
+                        ? `Nouveautés Version v${appUpdate.latestVersion}`
+                        : activeLang === 'es'
+                        ? `Novedades Versión v${appUpdate.latestVersion}`
+                        : `What's New in v${appUpdate.latestVersion}`}
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-cyan-950/80 border border-cyan-400/40 text-[#35c9ff]">
+                      {appUpdate.channel}
+                    </span>
+                    {appUpdate.isMandatory && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-950/80 border border-amber-400/40 text-amber-300">
+                        {activeLang === 'ht' ? 'Mizajou Obligatwa' : activeLang === 'fr' ? 'Mise à jour requise' : activeLang === 'es' ? 'Actualización obligatoria' : 'Mandatory Update'}
+                      </span>
+                    )}
+                  </div>
+                  {appUpdate.releaseDate && (
+                    <p className="text-[11px] text-blue-200/60 mt-0.5">
+                      {activeLang === 'ht' ? 'Dat Piblikasyon' : activeLang === 'fr' ? 'Date de sortie' : activeLang === 'es' ? 'Fecha de lanzamiento' : 'Release Date'}: {appUpdate.releaseDate}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {appUpdate.highlights?.[activeLang]?.length > 0 && (
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs text-blue-100/85">
+                {appUpdate.highlights[activeLang].map((item, idx) => (
+                  <li key={idx} className="flex items-start gap-2 bg-white/5 px-3 py-2 rounded-xl border border-white/5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {appUpdate.importantNotice?.[activeLang]?.trim() && (
+              <div className="p-3.5 rounded-xl bg-amber-950/50 border border-amber-500/35 text-xs text-amber-200 flex items-start gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <span>{appUpdate.importantNotice[activeLang]}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 4 Cards: Android (Available), Windows PC (Available with 64/32 switch), iOS (Coming Soon), Mac (Coming Soon) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          
+          {/* Card 1: Android APK (AVAILABLE NOW) */}
+          <div className="glass p-6 rounded-[22px] border-green-500/30 hover:border-green-400/60 transition-all duration-300 flex flex-col justify-between group shadow-[0_10px_30px_rgba(3,10,25,0.6)]">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500/20 to-blue-600/30 border border-green-400/30 flex items-center justify-center text-green-400 group-hover:scale-105 transition-transform shadow-lg">
+                  <Smartphone className="w-6 h-6" />
+                </div>
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-green-950/80 border border-green-500/40 text-green-300 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                  DISPONIB KOUNYE A
+                </span>
+              </div>
+
+              <div className="text-[10px] font-extrabold text-[#35c9ff] tracking-wider uppercase">ANDROID MOBILE</div>
+              <h3 className="text-xl font-extrabold text-white mt-1 mb-2">OmniChurch APK</h3>
+              <p className="text-xs text-blue-200/65 leading-relaxed mb-4">
+                Enstale fichye APK dirèkteman sou telefòn oswa tablèt Android ou san w pa bezwen pase pa Play Store.
+              </p>
+
+              <div className="space-y-2 text-xs text-blue-100/80 mb-6 bg-white/5 p-3 rounded-xl border border-white/5">
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
+                  <span>{lang === 'fr' ? `Version ${currentVersionBadge}` : lang === 'es' ? `Versión ${currentVersionBadge}` : lang === 'en' ? `Version ${currentVersionBadge}` : `Vèsyon ${currentVersionBadge}`}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
+                  <span>Gwosè Fichye: ~18 MB</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
+                  <span>Android 7.0 oswa pi resan</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => handleDownloadClick('mobile', 'Android APK', links.android)}
+              className="btn-gradient w-full py-3.5 px-4 rounded-xl text-white font-black text-xs flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:scale-[1.02] transition-transform"
+            >
+              <Download className="w-4 h-4" />
+              <span>Telechaje APK Dirèk (~18 MB)</span>
+            </button>
+          </div>
+
+          {/* Card 2: Windows Desktop PC (64-bit / 32-bit Intelligent) */}
+          <div className="glass p-6 rounded-[22px] border-cyan-400/40 hover:border-cyan-400/70 transition-all duration-300 flex flex-col justify-between group shadow-[0_10px_30px_rgba(3,10,25,0.6)] relative">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400/20 to-blue-600/30 border border-cyan-400/30 flex items-center justify-center text-[#35c9ff] group-hover:scale-105 transition-transform shadow-lg">
+                  <Monitor className="w-6 h-6" />
+                </div>
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-blue-950/80 border border-[#35c9ff]/40 text-[#35c9ff] flex items-center gap-1">
+                  <Cpu className="w-3 h-3" />
+                  DETEKSYON SMART
+                </span>
+              </div>
+
+              <div className="text-[10px] font-extrabold text-[#35c9ff] tracking-wider uppercase">WINDOWS DESKTOP</div>
+              <h3 className="text-xl font-extrabold text-white mt-1 mb-2">OmniChurch PC</h3>
+              <p className="text-xs text-blue-200/65 leading-relaxed mb-3">
+                Lojisyèl biwo pou jesyon ak sekretarya legliz la. Fonksyone offline e fasil pou enprime rapò.
+              </p>
+
+              {/* Architecture Selector 64-bit vs 32-bit */}
+              <div className="mb-4 p-2 rounded-xl bg-black/40 border border-white/10">
+                <div className="flex items-center justify-between text-[10px] font-bold text-blue-200/70 mb-1.5 px-1">
+                  <span>{t.download.chooseArch}</span>
+                  <span className="text-[#35c9ff]">
+                    {deviceInfo.isWindows ? `${t.download.detected} ${deviceInfo.bitness}-bit` : 'Windows'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedArch('64')}
+                    className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                      selectedArch === '64'
+                        ? 'bg-[#35c9ff] text-[#020712] shadow-md'
+                        : 'bg-white/5 text-blue-200/70 hover:text-white'
+                    }`}
+                  >
+                    <span>64-bit (x64)</span>
+                    {activeDetectedArch === '64' && (
+                      <span className="text-[9px] px-1 py-0.5 rounded bg-black/20 font-black text-cyan-900">
+                        ★ Detekte
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedArch('32')}
+                    className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                      selectedArch === '32'
+                        ? 'bg-[#35c9ff] text-[#020712] shadow-md'
+                        : 'bg-white/5 text-blue-200/70 hover:text-white'
+                    }`}
+                  >
+                    <span>32-bit (x86)</span>
+                    {activeDetectedArch === '32' && (
+                      <span className="text-[9px] px-1 py-0.5 rounded bg-black/20 font-black text-cyan-900">
+                        ★ Detekte
+                      </span>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2 text-xs text-blue-100/80 mb-6 bg-white/5 p-3 rounded-xl border border-white/5">
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
+                  <span>Windows 11 / 10 / 8 / 7</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
+                  <span>{lang === 'fr' ? `Installateur ${selectedArch}-bit (${currentVersionBadge})` : lang === 'es' ? `Instalador ${selectedArch}-bit (${currentVersionBadge})` : lang === 'en' ? `${selectedArch}-bit Installer (${currentVersionBadge})` : `Enstalatè ${selectedArch}-bit konpatib (${currentVersionBadge})`}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
+                  <span>Enprime anyè &amp; rapò dim</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <button
+                onClick={() => handleDownloadClick('pc', `Windows Installer (${selectedArch}-bit)`, winActiveUrl)}
+                className="btn-gradient w-full py-3.5 px-4 rounded-xl text-white font-black text-xs flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:scale-[1.02] transition-transform"
+              >
+                <Download className="w-4 h-4" />
+                <span>{dynamicButtonLabel}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleOpenGuide}
+                className="w-full py-2 px-3 rounded-xl bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-400/30 hover:border-cyan-400/60 text-cyan-300 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer group"
+                title="Gid Enstalasyon Entelijan pou PC"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
+                <span>Gid Enstalasyon PC ({selectedArch}-bit)</span>
+                <ChevronRight className="w-3 h-3 text-cyan-400/60 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
+          </div>
+
+          {/* Card 3: Apple iOS (iPhone & iPad) PWA */}
+          <div className="glass p-6 rounded-[22px] border-cyan-400/40 hover:border-cyan-400/70 transition-all duration-300 flex flex-col justify-between group shadow-[0_10px_30px_rgba(3,10,25,0.6)] relative">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400/20 to-blue-600/30 border border-cyan-400/40 flex items-center justify-center text-cyan-300 group-hover:scale-105 transition-transform shadow-lg">
+                  <Apple className="w-6 h-6" />
+                </div>
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-blue-950/80 border border-cyan-400/40 text-cyan-300 flex items-center gap-1">
+                  <Smartphone className="w-3 h-3" />
+                  PWA INSTANT
+                </span>
+              </div>
+
+              <div className="text-[10px] font-extrabold text-[#35c9ff] tracking-wider uppercase">APPLE iOS PWA</div>
+              <h3 className="text-xl font-extrabold text-white mt-1 mb-2">iPhone &amp; iPad</h3>
+              <p className="text-xs text-blue-200/65 leading-relaxed mb-3">
+                Vèsyon PWA ofisyèl pou iOS. Enstale dirèkteman nan Safari sou ekran akèy iPhone ou an tèt lòt aplikasyon yo.
+              </p>
+
+              <div className="space-y-2 text-xs text-blue-100/80 mb-6 bg-white/5 p-3 rounded-xl border border-white/5">
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
+                  <span>Lyen ofisyèl: ios.omnichurch.download</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
+                  <span>Enstalasyon rapid via Safari (Share → Add)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
+                  <span>100% Konpatib iOS 15+ ak iPadOS</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <button
+                onClick={() => {
+                  onTrackDownload('mobile', 'iOS PWA (ios.omnichurch.download)');
+                  window.open('https://ios.omnichurch.download/', '_blank', 'noopener,noreferrer');
+                }}
+                className="btn-gradient w-full py-3 px-4 rounded-xl text-white font-black text-xs flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:scale-[1.02] transition-transform"
+              >
+                <Download className="w-4 h-4" />
+                <span>Enstale sou iOS (iPhone)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onOpenIosGuide?.()}
+                className="w-full py-2 px-3 rounded-xl bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-400/30 hover:border-cyan-400/60 text-cyan-300 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer group"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
+                <span>Gid Enstalasyon PWA iOS (Screenshots)</span>
+                <ChevronRight className="w-3 h-3 text-cyan-400/60 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
+          </div>
+
+          {/* Card 4: Apple Mac macOS -> COMING SOON */}
+          <div className="glass p-6 rounded-[22px] border-amber-500/30 hover:border-amber-400/60 transition-all duration-300 flex flex-col justify-between group shadow-[0_10px_30px_rgba(3,10,25,0.6)] relative opacity-95">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-600/30 border border-amber-400/30 flex items-center justify-center text-amber-400 group-hover:scale-105 transition-transform shadow-lg">
+                  <Monitor className="w-6 h-6" />
+                </div>
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-950/90 border border-amber-500/40 text-amber-300 flex items-center gap-1.5 shadow-sm">
+                  <Clock className="w-3 h-3 text-amber-400 animate-spin" />
+                  COMING SOON
+                </span>
+              </div>
+
+              <div className="text-[10px] font-extrabold text-amber-400 tracking-wider uppercase">APPLE MAC</div>
+              <h3 className="text-xl font-extrabold text-white mt-1 mb-2">macOS Universal</h3>
+              <p className="text-xs text-blue-200/65 leading-relaxed mb-4">
+                Vèsyon pou òdinatè Apple Mac (Apple Silicon M1/M2/M3 ak Intel) ap prepare pou kominote a.
+              </p>
+
+              <div className="space-y-2 text-xs text-blue-100/80 mb-6 bg-white/5 p-3 rounded-xl border border-white/5">
+                <div className="flex items-center gap-2 text-amber-200/80">
+                  <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span className="font-semibold">Estati: Ap Vini Talè</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                  <span>Pou Apple Silicon &amp; Intel Mac</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                  <span>Fichye .dmg enstalasyon fasil</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => showComingSoonAlert('Apple Mac (macOS)')}
+              className="w-full py-3.5 px-4 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-200 font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all"
+            >
+              <Clock className="w-4 h-4 text-amber-400" />
+              <span>Ap Vini Talè sou Mac (.dmg)</span>
+            </button>
+          </div>
+
+        </div>
+
+        {/* Social Share Bar */}
+        <div className="mt-8 p-5 sm:p-6 rounded-[22px] glass border border-[#35c9ff]/30 bg-gradient-to-r from-[#031533]/80 via-[#071d42]/70 to-[#020b1f]/90 flex flex-col lg:flex-row items-center justify-between gap-5 shadow-[0_10px_35px_rgba(8,124,255,0.2)]">
+          <div className="space-y-1 text-center lg:text-left">
+            <div className="flex items-center justify-center lg:justify-start gap-2">
+              <div className="w-7 h-7 rounded-lg bg-[#35c9ff]/15 border border-[#35c9ff]/30 flex items-center justify-center text-[#35c9ff]">
+                <Share2 className="w-4 h-4" />
+              </div>
+              <h3 className="text-sm sm:text-base font-black text-white">
+                {t.download.shareTitle}
+              </h3>
+            </div>
+            <p className="text-xs text-blue-200/70 max-w-xl">
+              {t.download.shareDesc}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-2.5 w-full lg:w-auto shrink-0">
+            {/* WhatsApp Share Button */}
+            <button
+              type="button"
+              onClick={handleShareWhatsApp}
+              className="flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/50 text-emerald-300 hover:text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.25)] hover:scale-[1.02] cursor-pointer"
+              title="WhatsApp"
+            >
+              <MessageCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>{t.download.shareWa}</span>
+            </button>
+
+            {/* Facebook Share Button */}
+            <button
+              type="button"
+              onClick={handleShareFacebook}
+              className="flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl bg-blue-950/80 hover:bg-blue-900 border border-blue-400/50 text-sky-200 hover:text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(59,130,246,0.25)] hover:scale-[1.02] cursor-pointer"
+              title="Facebook"
+            >
+              <svg className="w-4 h-4 fill-current text-[#35c9ff] shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+              </svg>
+              <span>{t.download.shareFb}</span>
+            </button>
+
+            {/* Copy Link Button */}
+            <button
+              type="button"
+              onClick={handleCopyShareLink}
+              className="px-3.5 py-2.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/15 text-blue-200 hover:text-white text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer shrink-0"
+              title="Copy"
+            >
+              {copiedShareLink ? (
+                <>
+                  <Check className="w-4 h-4 text-emerald-400" />
+                  <span className="text-emerald-300">{t.download.shareCopied}</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4 text-[#35c9ff]" />
+                  <span className="hidden sm:inline">{t.download.shareCopy}</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Email Notification for Coming Soon Releases */}
+        <div className="mt-10 p-5 sm:p-6 rounded-[22px] glass border border-amber-500/30 bg-gradient-to-r from-blue-950/40 via-[#071738]/60 to-amber-950/30 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6">
+          <div className="space-y-1 text-left">
+            <div className="flex items-center gap-2">
+              <Bell className="w-4 h-4 text-amber-400 shrink-0" />
+              <span className="text-sm font-bold text-white">
+                {t.download.notifyTitle}
+              </span>
+            </div>
+            <p className="text-xs text-blue-200/60">
+              {t.download.notifyDesc}
+            </p>
+          </div>
+
+          <form onSubmit={handleNotifySubmit} className="flex flex-col sm:flex-row w-full md:w-auto items-stretch sm:items-center gap-2">
+            <input
+              type="email"
+              placeholder={t.download.notifyPlaceholder}
+              value={notifiedEmail}
+              onChange={(e) => setNotifiedEmail(e.target.value)}
+              required
+              className="px-4 py-3 sm:py-2.5 rounded-xl bg-black/50 border border-white/15 text-white text-xs placeholder:text-blue-200/40 focus:outline-none focus:border-[#35c9ff] w-full md:w-64"
+            />
+            <button
+              type="submit"
+              className="btn-gradient w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl text-white font-bold text-xs shrink-0 cursor-pointer"
+            >
+              {isNotified ? t.download.notifySuccess : t.download.notifyBtn}
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+      {/* Fallback Smart PC Guide Modal */}
+      {localGuideOpen && (
+        <PcInstallGuideModal
+          isOpen={localGuideOpen}
+          onClose={() => setLocalGuideOpen(false)}
+          detectedArch={activeDetectedArch}
+          links={links}
+          onDownload={handleDownloadClick}
+        />
+      )}
+    </section>
+  );
+};
+
